@@ -1,0 +1,769 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000         ;****************************************
+    2 00000000         ; NokiaTest-Class-main.s
+    3 00000000         ; Used to test Nokia5110-Class.s
+    4 00000000         ; inlcude startup.s
+    5 00000000         
+    6 00000000         
+    7 00000000         ;*******************************************************
+                       ********
+    8 00000000         ; Program section           
+    9 00000000         ;*******************************************************
+                       ********
+   10 00000000         ;LABEL  DIRECTIVE VALUE   COMMENT
+   11 00000000                 AREA             |.text|, READONLY, CODE
+   12 00000000                 THUMB
+   13 00000000         
+   14 00000000 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00    imgRam  DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   15 0000000E 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 80 
+              40 20            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x40, 0x20
+   16 0000001C 20 90 90 
+              C8 C8 E4 
+              E4 E4 F6 
+              F2 F2 F2 
+              F2 F2            DCB              0x20, 0x90, 0x90, 0xC8, 0xC8, 0
+xE4, 0xE4, 0xE4, 0xF6, 0xF2, 0xF2, 0xF2, 0xF2, 0xF2
+   17 0000002A F2 F2 F2 
+              F2 F2 F6 
+              E4 E4 E4 
+              C8 C8 90 
+              90 20            DCB              0xF2, 0xF2, 0xF2, 0xF2, 0xF2, 0
+xF6, 0xE4, 0xE4, 0xE4, 0xC8, 0xC8, 0x90, 0x90, 0x20
+   18 00000038 20 40 80 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x20, 0x40, 0x80, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   19 00000046 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   20 00000054 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   21 00000062 00 00 00 
+              00 C0 70 
+
+
+
+ARM Macro Assembler    Page 2 
+
+
+              18 0C 06 
+              03 81 84 
+              82 82            DCB              0x00, 0x00, 0x00, 0x00, 0xC0, 0
+x70, 0x18, 0x0C, 0x06, 0x03, 0x81, 0x84, 0x82, 0x82
+   22 00000070 81 81 81 
+              81 03 03 
+              07 07 0F 
+              0F 1F 3F 
+              7F FF            DCB              0x81, 0x81, 0x81, 0x81, 0x03, 0
+x03, 0x07, 0x07, 0x0F, 0x0F, 0x1F, 0x3F, 0x7F, 0xFF
+   23 0000007E FF 7F 3F 
+              1F 0F 0F 
+              07 07 03 
+              03 81 81 
+              81 81            DCB              0xFF, 0x7F, 0x3F, 0x1F, 0x0F, 0
+x0F, 0x07, 0x07, 0x03, 0x03, 0x81, 0x81, 0x81, 0x81
+   24 0000008C 82 82 84 
+              81 03 06 
+              0C 18 70 
+              C0 00 00 
+              00 00            DCB              0x82, 0x82, 0x84, 0x81, 0x03, 0
+x06, 0x0C, 0x18, 0x70, 0xC0, 0x00, 0x00, 0x00, 0x00
+   25 0000009A 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   26 000000A8 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   27 000000B6 00 00 F0 
+              FF 03 00 
+              00 00 01 
+              01 C0 21 
+              1B 1F            DCB              0x00, 0x00, 0xF0, 0xFF, 0x03, 0
+x00, 0x00, 0x00, 0x01, 0x01, 0xC0, 0x21, 0x1B, 0x1F
+   28 000000C4 DF DF 87 
+              87 CF 3F 
+              3E 3C 78 
+              F0 F0 F8 
+              FC FF            DCB              0xDF, 0xDF, 0x87, 0x87, 0xCF, 0
+x3F, 0x3E, 0x3C, 0x78, 0xF0, 0xF0, 0xF8, 0xFC, 0xFF
+   29 000000D2 FF FC F8 
+              F0 F0 78 
+              3C 3E 3F 
+              CF 87 87 
+              DF DF            DCB              0xFF, 0xFC, 0xF8, 0xF0, 0xF0, 0
+x78, 0x3C, 0x3E, 0x3F, 0xCF, 0x87, 0x87, 0xDF, 0xDF
+   30 000000E0 1F 1B 21 
+              C0 01 01 
+              00 00 00 
+              03 FF F0 
+              00 00            DCB              0x1F, 0x1B, 0x21, 0xC0, 0x01, 0
+x01, 0x00, 0x00, 0x00, 0x03, 0xFF, 0xF0, 0x00, 0x00
+   31 000000EE 00 00 00 
+
+
+
+ARM Macro Assembler    Page 3 
+
+
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   32 000000FC 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   33 0000010A 00 00 07 
+              7F C0 00 
+              00 00 20 
+              40 83 9F 
+              3F 3E            DCB              0x00, 0x00, 0x07, 0x7F, 0xC0, 0
+x00, 0x00, 0x00, 0x20, 0x40, 0x83, 0x9F, 0x3F, 0x3E
+   34 00000118 7E F8 00 
+              0F F8 C0 
+              01 03 06 
+              80 61 3B 
+              0B 0F            DCB              0x7E, 0xF8, 0x00, 0x0F, 0xF8, 0
+xC0, 0x01, 0x03, 0x06, 0x80, 0x61, 0x3B, 0x0B, 0x0F
+   35 00000126 0F 0B 3B 
+              61 80 06 
+              03 01 C0 
+              F8 0F 00 
+              F8 7E            DCB              0x0F, 0x0B, 0x3B, 0x61, 0x80, 0
+x06, 0x03, 0x01, 0xC0, 0xF8, 0x0F, 0x00, 0xF8, 0x7E
+   36 00000134 3E 3F 9F 
+              83 40 20 
+              00 00 00 
+              C0 7F 07 
+              00 00            DCB              0x3E, 0x3F, 0x9F, 0x83, 0x40, 0
+x20, 0x00, 0x00, 0x00, 0xC0, 0x7F, 0x07, 0x00, 0x00
+   37 00000142 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   38 00000150 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   39 0000015E 00 00 00 
+              00 03 07 
+              1C 31 62 
+              CC 98 21 
+              21 66            DCB              0x00, 0x00, 0x00, 0x00, 0x03, 0
+x07, 0x1C, 0x31, 0x62, 0xCC, 0x98, 0x21, 0x21, 0x66
+   40 0000016C 7C 78 01 
+              87 FF FF 
+              FF FE FC 
+              F8 F0 C2 
+              C2 C6            DCB              0x7C, 0x78, 0x01, 0x87, 0xFF, 0
+xFF, 0xFF, 0xFE, 0xFC, 0xF8, 0xF0, 0xC2, 0xC2, 0xC6
+
+
+
+ARM Macro Assembler    Page 4 
+
+
+   41 0000017A C6 C2 C2 
+              F0 F8 FC 
+              FE FF FF 
+              FF 87 01 
+              78 7C            DCB              0xC6, 0xC2, 0xC2, 0xF0, 0xF8, 0
+xFC, 0xFE, 0xFF, 0xFF, 0xFF, 0x87, 0x01, 0x78, 0x7C
+   42 00000188 66 21 21 
+              98 CC 62 
+              31 1C 07 
+              03 00 00 
+              00 00            DCB              0x66, 0x21, 0x21, 0x98, 0xCC, 0
+x62, 0x31, 0x1C, 0x07, 0x03, 0x00, 0x00, 0x00, 0x00
+   43 00000196 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   44 000001A4 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   45 000001B2 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 01 03 
+              06 04            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x03, 0x06, 0x04
+   46 000001C0 0C 09 19 
+              13 13 37 
+              27 27 6F 
+              4F 4F 4F 
+              4F 4F            DCB              0x0C, 0x09, 0x19, 0x13, 0x13, 0
+x37, 0x27, 0x27, 0x6F, 0x4F, 0x4F, 0x4F, 0x4F, 0x4F
+   47 000001CE 4F 4F 4F 
+              4F 4F 6F 
+              27 27 37 
+              13 13 19 
+              09 0C            DCB              0x4F, 0x4F, 0x4F, 0x4F, 0x4F, 0
+x6F, 0x27, 0x27, 0x37, 0x13, 0x13, 0x19, 0x09, 0x0C
+   48 000001DC 04 06 03 
+              01 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x04, 0x06, 0x03, 0x01, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   49 000001EA 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   50 000001F8         imgCSU
+   51 000001F8 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+
+
+
+ARM Macro Assembler    Page 5 
+
+
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   52 00000206 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   53 00000214 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   54 00000222 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   55 00000230 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   56 0000023E 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   57 0000024C 00 E0 F8 
+              F8 FC 04 
+              02 02 02 
+              02 02 02 
+              04 1E            DCB              0x00, 0xE0, 0xF8, 0xF8, 0xFC, 0
+x04, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x04, 0x1E
+   58 0000025A C0 E0 30 
+              10 08 08 
+              08 10 70 
+              E0 C0 02 
+              FE FE            DCB              0xC0, 0xE0, 0x30, 0x10, 0x08, 0
+x08, 0x08, 0x10, 0x70, 0xE0, 0xC0, 0x02, 0xFE, 0xFE
+   59 00000268 FE 00 C0 
+              E0 F0 30 
+              08 08 08 
+              08 30 E0 
+              E0 80            DCB              0xFE, 0x00, 0xC0, 0xE0, 0xF0, 0
+x30, 0x08, 0x08, 0x08, 0x08, 0x30, 0xE0, 0xE0, 0x80
+   60 00000276 10 F0 F0 
+              40 20 30 
+              30 70 00 
+              20 10 10 
+              90 B0            DCB              0x10, 0xF0, 0xF0, 0x40, 0x20, 0
+x30, 0x30, 0x70, 0x00, 0x20, 0x10, 0x10, 0x90, 0xB0
+   61 00000284 F0 E0 E0 
+              00 C0 E0 
+              70 10 10 
+
+
+
+ARM Macro Assembler    Page 6 
+
+
+              10 12 FE 
+              FE FE            DCB              0xF0, 0xE0, 0xE0, 0x00, 0xC0, 0
+xE0, 0x70, 0x10, 0x10, 0x10, 0x12, 0xFE, 0xFE, 0xFE
+   62 00000292 00 C0 E0 
+              F0 30 08 
+              08 08 08 
+              10 E0 E0 
+              C0 00            DCB              0x00, 0xC0, 0xE0, 0xF0, 0x30, 0
+x08, 0x08, 0x08, 0x08, 0x10, 0xE0, 0xE0, 0xC0, 0x00
+   63 000002A0 00 01 07 
+              0F 0F 1C 
+              18 10 10 
+              10 10 08 
+              08 04            DCB              0x00, 0x01, 0x07, 0x0F, 0x0F, 0
+x1C, 0x18, 0x10, 0x10, 0x10, 0x10, 0x08, 0x08, 0x04
+   64 000002AE 07 0F 0C 
+              10 10 10 
+              10 98 CE 
+              E7 23 10 
+              1F 1F            DCB              0x07, 0x0F, 0x0C, 0x10, 0x10, 0
+x10, 0x10, 0x98, 0xCE, 0xE7, 0x23, 0x10, 0x1F, 0x1F
+   65 000002BC 1F 30 E3 
+              07 0F 98 
+              F0 10 10 
+              10 18 0F 
+              07 03            DCB              0x1F, 0x30, 0xE3, 0x07, 0x0F, 0
+x98, 0xF0, 0x10, 0x10, 0x10, 0x18, 0x0F, 0x07, 0x03
+   66 000002CA 10 1F 1F 
+              10 10 00 
+              00 80 EE 
+              1F 1B 11 
+              10 08            DCB              0x10, 0x1F, 0x1F, 0x10, 0x10, 0
+x00, 0x00, 0x80, 0xEE, 0x1F, 0x1B, 0x11, 0x10, 0x08
+   67 000002D8 07 1F 1F 
+              10 07 0F 
+              1E 18 10 
+              10 10 1F 
+              1F 1F            DCB              0x07, 0x1F, 0x1F, 0x10, 0x07, 0
+x0F, 0x1E, 0x18, 0x10, 0x10, 0x10, 0x1F, 0x1F, 0x1F
+   68 000002E6 10 03 07 
+              0F 0C 10 
+              10 10 10 
+              18 0F 07 
+              03 00            DCB              0x10, 0x03, 0x07, 0x0F, 0x0C, 0
+x10, 0x10, 0x10, 0x10, 0x18, 0x0F, 0x07, 0x03, 0x00
+   69 000002F4 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   70 00000302 00 00 00 
+              00 00 00 
+              00 03 07 
+              07 0E 1E 
+              3C 78            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x03, 0x07, 0x07, 0x0E, 0x1E, 0x3C, 0x78
+   71 00000310 F8 F0 E1 
+              01 FF FF 
+
+
+
+ARM Macro Assembler    Page 7 
+
+
+              FF 01 01 
+              80 E0 F2 
+              B1 11            DCB              0xF8, 0xF0, 0xE1, 0x01, 0xFF, 0
+xFF, 0xFF, 0x01, 0x01, 0x80, 0xE0, 0xF2, 0xB1, 0x11
+   72 0000031E 0B 8B FF 
+              FE FC 01 
+              FF FF FF 
+              01 01 B1 
+              7C FE            DCB              0x0B, 0x8B, 0xFF, 0xFE, 0xFC, 0
+x01, 0xFF, 0xFF, 0xFF, 0x01, 0x01, 0xB1, 0x7C, 0xFE
+   73 0000032C FF 89 09 
+              09 0F 0E 
+              8C 08 00 
+              00 00 00 
+              00 00            DCB              0xFF, 0x89, 0x09, 0x09, 0x0F, 0
+x0E, 0x8C, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   74 0000033A 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   75 00000348 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   76 00000356 00 00 00 
+              00 00 00 
+              00 02 04 
+              0C 0C 0C 
+              0C 0E            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x02, 0x04, 0x0C, 0x0C, 0x0C, 0x0C, 0x0E
+   77 00000364 07 03 03 
+              00 00 01 
+              03 03 01 
+              00 00 01 
+              01 01            DCB              0x07, 0x03, 0x03, 0x00, 0x00, 0
+x01, 0x03, 0x03, 0x01, 0x00, 0x00, 0x01, 0x01, 0x01
+   78 00000372 01 00 01 
+              01 01 01 
+              00 01 01 
+              01 01 00 
+              00 00            DCB              0x01, 0x00, 0x01, 0x01, 0x01, 0
+x01, 0x00, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00
+   79 00000380 01 01 01 
+              01 01 01 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x01, 0x01, 0x01, 0x01, 0x01, 0
+x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   80 0000038E 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   81 0000039C 00 00 00 
+
+
+
+ARM Macro Assembler    Page 8 
+
+
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   82 000003AA 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   83 000003B8 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   84 000003C6 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   85 000003D4 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   86 000003E2 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+   87 000003F0         
+   88 000003F0 59 6F 75 
+              20 57 69 
+              6E 04    tstmsg  DCB              "You Win",0x04
+   89 000003F8                 SPACE            0           ; added for padding
+                                                            
+   90 000003F8         
+   91 000003F8                 EXTERN           Nokia_Init
+   92 000003F8                 EXTERN           OutImgNokia
+   93 000003F8                 EXTERN           SetXYNokia
+   94 000003F8                 EXTERN           Out1BNokia
+   95 000003F8                 EXTERN           OutStrNokia
+   96 000003F8                 EXTERN           ClearNokia
+   97 000003F8         
+   98 000003F8                 EXPORT           Start
+   99 000003F8         
+  100 000003F8         
+  101 000003F8 F7FF FFFE 
+                       Start   BL               Nokia_Init  ; initialize LCD
+  102 000003FC 4D19    loadRam LDR              R5,=imgRam  ; load img address 
+                                                            of Ram
+  103 000003FE F7FF FFFE       BL               OutImgNokia ; use img routine
+  104 00000402         
+  105 00000402 F000 F821       BL               delay       ; leave image for a
+
+
+
+ARM Macro Assembler    Page 9 
+
+
+                                                             few s
+  106 00000406         
+  107 00000406 F04F 0000       MOV              R0, #0      ; reset XY position
+                                                             to 0,0
+  108 0000040A F04F 0100       MOV              R1, #0      ; using setXY routi
+                                                            ne
+  109 0000040E F7FF FFFE       BL               SetXYNokia  ; DC is left high r
+                                                            eady to send data
+  110 00000412         ; transition to CSU           
+  111 00000412 F44F 70FC       MOV              R0,#504     ; 504 bytes in full
+                                                             image
+  112 00000416 4914            LDR              R1,=imgCSU  ; put img address i
+                                                            n R1
+  113 00000418         sendNxtCSUByte
+  114 00000418 F811 5B01       LDRB             R5,[R1],#1  ; load R5 with byte
+                                                            , post inc addr
+  115 0000041C F7FF FFFE       BL               Out1BNokia  ; use byte routine
+  116 00000420 F000 F819       BL               delayTrans  ; slow down loading
+                                                             of next byte
+  117 00000424 3801            SUBS             R0,#1
+  118 00000426 D1F7            BNE              sendNxtCSUByte
+  119 00000428         
+  120 00000428 F000 F80E       BL               delay       ; leave image for a
+                                                             few s
+  121 0000042C         
+  122 0000042C         ;clear screen using ClearNokia routine
+  123 0000042C F7FF FFFE       BL               ClearNokia
+  124 00000430         
+  125 00000430         
+  126 00000430 F04F 0014       MOV              R0, #20     ; X pos (0-83)
+  127 00000434 F04F 0102       MOV              R1, #2      ; Y pos (0-5)
+  128 00000438 F7FF FFFE       BL               SetXYNokia  ; set XY position
+  129 0000043C 4D0B            LDR              R5,=tstmsg
+  130 0000043E F7FF FFFE       BL               OutStrNokia
+  131 00000442         
+  132 00000442 F000 F801       BL               delay       ; leave text up
+  133 00000446         
+  134 00000446 E7D9    done    B                loadRam     ; loop   
+  135 00000448         
+  136 00000448         
+  137 00000448 B401    delay   PUSH             {R0}
+  138 0000044A F248 5055       MOV              R0,#0x8555
+  139 0000044E         ;   MOVT R0,#0x0140
+  140 0000044E 3801    del     SUBS             R0,#1
+  141 00000450 D1FD            BNE              del
+  142 00000452 BC01            POP              {R0}
+  143 00000454 4770            BX               LR
+  144 00000456         
+  145 00000456 B401    delayTrans
+                               PUSH             {R0}
+  146 00000458 F645 0055       MOV              R0,#0x5855  ;~250ms
+  147 0000045C         ;   MOVT R0,#0x0014
+  148 0000045C 3801    dt      SUBS             R0,#1
+  149 0000045E D1FD            BNE              dt
+  150 00000460 BC01            POP              {R0}
+  151 00000462 4770            BX               LR
+  152 00000464         
+  153 00000464         
+  154 00000464                 ALIGN
+
+
+
+ARM Macro Assembler    Page 10 
+
+
+  155 00000464                 END
+              00000000 
+              00000000 
+              00000000 
+Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp --apcs=int
+erwork --depend=.\objects\nokiatest-class-main.d -o.\objects\nokiatest-class-ma
+in.o -I.\RTE\_Target_1 -IC:\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include
+\TM4C123 -IC:\Keil_v5\ARM\CMSIS\Include --predefine="__EVAL SETA 1" --predefine
+="__UVISION_VERSION SETA 526" --predefine="TM4C123GH6PM SETA 1" --list=.\listin
+gs\nokiatest-class-main.lst NokiaTest-Class-main.s
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+.text 00000000
+
+Symbol: .text
+   Definitions
+      At line 11 in file NokiaTest-Class-main.s
+   Uses
+      None
+Comment: .text unused
+Start 000003F8
+
+Symbol: Start
+   Definitions
+      At line 101 in file NokiaTest-Class-main.s
+   Uses
+      At line 98 in file NokiaTest-Class-main.s
+Comment: Start used once
+del 0000044E
+
+Symbol: del
+   Definitions
+      At line 140 in file NokiaTest-Class-main.s
+   Uses
+      At line 141 in file NokiaTest-Class-main.s
+Comment: del used once
+delay 00000448
+
+Symbol: delay
+   Definitions
+      At line 137 in file NokiaTest-Class-main.s
+   Uses
+      At line 105 in file NokiaTest-Class-main.s
+      At line 120 in file NokiaTest-Class-main.s
+      At line 132 in file NokiaTest-Class-main.s
+
+delayTrans 00000456
+
+Symbol: delayTrans
+   Definitions
+      At line 145 in file NokiaTest-Class-main.s
+   Uses
+      At line 116 in file NokiaTest-Class-main.s
+Comment: delayTrans used once
+done 00000446
+
+Symbol: done
+   Definitions
+      At line 134 in file NokiaTest-Class-main.s
+   Uses
+      None
+Comment: done unused
+dt 0000045C
+
+Symbol: dt
+   Definitions
+      At line 148 in file NokiaTest-Class-main.s
+   Uses
+      At line 149 in file NokiaTest-Class-main.s
+Comment: dt used once
+imgCSU 000001F8
+
+
+
+ARM Macro Assembler    Page 2 Alphabetic symbol ordering
+Relocatable symbols
+
+
+Symbol: imgCSU
+   Definitions
+      At line 50 in file NokiaTest-Class-main.s
+   Uses
+      At line 112 in file NokiaTest-Class-main.s
+Comment: imgCSU used once
+imgRam 00000000
+
+Symbol: imgRam
+   Definitions
+      At line 14 in file NokiaTest-Class-main.s
+   Uses
+      At line 102 in file NokiaTest-Class-main.s
+Comment: imgRam used once
+loadRam 000003FC
+
+Symbol: loadRam
+   Definitions
+      At line 102 in file NokiaTest-Class-main.s
+   Uses
+      At line 134 in file NokiaTest-Class-main.s
+Comment: loadRam used once
+sendNxtCSUByte 00000418
+
+Symbol: sendNxtCSUByte
+   Definitions
+      At line 113 in file NokiaTest-Class-main.s
+   Uses
+      At line 118 in file NokiaTest-Class-main.s
+Comment: sendNxtCSUByte used once
+tstmsg 000003F0
+
+Symbol: tstmsg
+   Definitions
+      At line 88 in file NokiaTest-Class-main.s
+   Uses
+      At line 129 in file NokiaTest-Class-main.s
+Comment: tstmsg used once
+12 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+External symbols
+
+ClearNokia 00000000
+
+Symbol: ClearNokia
+   Definitions
+      At line 96 in file NokiaTest-Class-main.s
+   Uses
+      At line 123 in file NokiaTest-Class-main.s
+Comment: ClearNokia used once
+Nokia_Init 00000000
+
+Symbol: Nokia_Init
+   Definitions
+      At line 91 in file NokiaTest-Class-main.s
+   Uses
+      At line 101 in file NokiaTest-Class-main.s
+Comment: Nokia_Init used once
+Out1BNokia 00000000
+
+Symbol: Out1BNokia
+   Definitions
+      At line 94 in file NokiaTest-Class-main.s
+   Uses
+      At line 115 in file NokiaTest-Class-main.s
+Comment: Out1BNokia used once
+OutImgNokia 00000000
+
+Symbol: OutImgNokia
+   Definitions
+      At line 92 in file NokiaTest-Class-main.s
+   Uses
+      At line 103 in file NokiaTest-Class-main.s
+Comment: OutImgNokia used once
+OutStrNokia 00000000
+
+Symbol: OutStrNokia
+   Definitions
+      At line 95 in file NokiaTest-Class-main.s
+   Uses
+      At line 130 in file NokiaTest-Class-main.s
+Comment: OutStrNokia used once
+SetXYNokia 00000000
+
+Symbol: SetXYNokia
+   Definitions
+      At line 93 in file NokiaTest-Class-main.s
+   Uses
+      At line 109 in file NokiaTest-Class-main.s
+      At line 128 in file NokiaTest-Class-main.s
+
+6 symbols
+354 symbols in table

@@ -1,0 +1,2268 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000         ; Nokia5110-Class.s
+    2 00000000         
+    3 00000000         ; Sets up SSI0, PA6-PA2 to work with the
+    4 00000000         ; Nokia 5110
+    5 00000000         
+    6 00000000         ; Pin connections
+    7 00000000         ; ------------------------------------------
+    8 00000000         ; Signal        (Nokia 5110) LaunchPad pin
+    9 00000000         ; ------------------------------------------
+   10 00000000         ; 3.3V          (VCC, pin 1) power
+   11 00000000         ; Ground        (GND, pin 2) ground
+   12 00000000         ; SSI0Fss       (SCE, pin 3) connected to PA3
+   13 00000000         ; Reset         (RST, pin 4) connected to PA7
+   14 00000000         ; Data/Command  (D/C, pin 5) connected to PA6
+   15 00000000         ; SSI0Tx        (DN,  pin 6) connected to PA5
+   16 00000000         ; SSI0Clk       (SCLK, pin 7) connected to PA2
+   17 00000000         ; back light    (LED, pin 8) not connected, consists of 
+                       4 white LEDs which draw ~80mA total
+   18 00000000         
+   19 00000000         ;GPIO Registers
+   20 00000000 400043FC 
+                       GPIO_PORTA_DATA
+                               EQU              0x400043FC  ; Port A Data
+   21 00000000 40004010 
+                       GPIO_PORTA_IM
+                               EQU              0x40004010  ; Interrupt Mask
+   22 00000000 40004400 
+                       GPIO_PORTA_DIR
+                               EQU              0x40004400  ; Port Direction
+   23 00000000 40004420 
+                       GPIO_PORTA_AFSEL
+                               EQU              0x40004420  ; Alt Function enab
+                                                            le
+   24 00000000 4000451C 
+                       GPIO_PORTA_DEN
+                               EQU              0x4000451C  ; Digital Enable
+   25 00000000 40004528 
+                       GPIO_PORTA_AMSEL
+                               EQU              0x40004528  ; Analog enable
+   26 00000000 4000452C 
+                       GPIO_PORTA_PCTL
+                               EQU              0x4000452C  ; Alternate Functio
+                                                            ns
+   27 00000000         
+   28 00000000 400053FC 
+                       GPIO_PORTB_DATA
+                               EQU              0x400053FC  ; Port B Data
+   29 00000000 40005010 
+                       GPIO_PORTB_IM
+                               EQU              0x40005010  ; Interrupt Mask
+   30 00000000 40005400 
+                       GPIO_PORTB_DIR
+                               EQU              0x40005400  ; Port Direction
+   31 00000000 40005420 
+                       GPIO_PORTB_AFSEL
+                               EQU              0x40005420  ; Alt Function enab
+                                                            le
+   32 00000000 4000551C 
+                       GPIO_PORTB_DEN
+
+
+
+ARM Macro Assembler    Page 2 
+
+
+                               EQU              0x4000551C  ; Digital Enable
+   33 00000000 40005528 
+                       GPIO_PORTB_AMSEL
+                               EQU              0x40005528  ; Analog enable
+   34 00000000 4000552C 
+                       GPIO_PORTB_PCTL
+                               EQU              0x4000552C  ; Alternate Functio
+                                                            ns
+   35 00000000         
+   36 00000000         ;SSI Registers
+   37 00000000 40008000 
+                       SSI0_CR0
+                               EQU              0x40008000
+   38 00000000 40008004 
+                       SSI0_CR1
+                               EQU              0x40008004
+   39 00000000 40008008 
+                       SSI0_DR EQU              0x40008008
+   40 00000000 4000800C 
+                       SSI0_SR EQU              0x4000800C
+   41 00000000 40008010 
+                       SSI0_CPSR
+                               EQU              0x40008010
+   42 00000000 40008FC8 
+                       SSI0_CC EQU              0x40008FC8
+   43 00000000         
+   44 00000000         ;System Registers
+   45 00000000 400FE608 
+                       SYSCTL_RCGCGPIO
+                               EQU              0x400FE608  ; GPIO Gate Control
+                                                            
+   46 00000000 400FE61C 
+                       SYSCTL_RCGCSSI
+                               EQU              0x400FE61C  ; SSI Gate Control
+   47 00000000         
+   48 00000000                 AREA             timer, CODE, READONLY
+   49 00000000                 THUMB
+   50 00000000         
+   51 00000000                 EXPORT           Nokia_Init
+   52 00000000                 EXPORT           Out1BNokia
+   53 00000000                 EXPORT           OutImgNokia
+   54 00000000                 EXPORT           SetXYNokia
+   55 00000000                 EXPORT           OutCharNokia
+   56 00000000                 EXPORT           OutStrNokia
+   57 00000000                 EXPORT           ClearNokia
+   58 00000000                 EXPORT           OutCrsUNokia
+   59 00000000                 EXPORT           OutCrsLNokia
+   60 00000000                 EXPORT           Cleargamefield
+   61 00000000                 EXPORT           OutBUNokia
+   62 00000000                 EXPORT           OutBLNokia
+   63 00000000                 EXPORT           OutCUNokia
+   64 00000000                 EXPORT           OutCLNokia
+   65 00000000                 EXPORT           hfmessage
+   66 00000000         
+   67 00000000         ; ASCII table for characters to be displayed
+   68 00000000 00 00 00 
+              00 00    ASCII   DCB              0x00, 0x00, 0x00, 0x00, 0x00 
+                                                            ;// 20
+   69 00000005 00 00 5F 
+
+
+
+ARM Macro Assembler    Page 3 
+
+
+              00 00            DCB              0x00, 0x00, 0x5f, 0x00, 0x00 
+                                                            ;// 21 !
+   70 0000000A 00 07 00 
+              07 00            DCB              0x00, 0x07, 0x00, 0x07, 0x00 
+                                                            ;// 22 "
+   71 0000000F 14 7F 14 
+              7F 14            DCB              0x14, 0x7f, 0x14, 0x7f, 0x14 
+                                                            ;// 23 #
+   72 00000014 24 2A 7F 
+              2A 12            DCB              0x24, 0x2a, 0x7f, 0x2a, 0x12 
+                                                            ;// 24 $
+   73 00000019 23 13 08 
+              64 62            DCB              0x23, 0x13, 0x08, 0x64, 0x62 
+                                                            ;// 25 %
+   74 0000001E 36 49 55 
+              22 50            DCB              0x36, 0x49, 0x55, 0x22, 0x50 
+                                                            ;// 26 &
+   75 00000023 00 05 03 
+              00 00            DCB              0x00, 0x05, 0x03, 0x00, 0x00 
+                                                            ;// 27 '
+   76 00000028 00 1C 22 
+              41 00            DCB              0x00, 0x1c, 0x22, 0x41, 0x00 
+                                                            ;// 28 (
+   77 0000002D 00 41 22 
+              1C 00            DCB              0x00, 0x41, 0x22, 0x1c, 0x00 
+                                                            ;// 29 )
+   78 00000032 14 08 3E 
+              08 14            DCB              0x14, 0x08, 0x3e, 0x08, 0x14 
+                                                            ;// 2a *
+   79 00000037 08 08 3E 
+              08 08            DCB              0x08, 0x08, 0x3e, 0x08, 0x08 
+                                                            ;// 2b +
+   80 0000003C 00 50 30 
+              00 00            DCB              0x00, 0x50, 0x30, 0x00, 0x00 
+                                                            ;// 2c ,
+   81 00000041 08 08 08 
+              08 08            DCB              0x08, 0x08, 0x08, 0x08, 0x08 
+                                                            ;// 2d -
+   82 00000046 00 60 60 
+              00 00            DCB              0x00, 0x60, 0x60, 0x00, 0x00 
+                                                            ;// 2e .
+   83 0000004B 20 10 08 
+              04 02            DCB              0x20, 0x10, 0x08, 0x04, 0x02 
+                                                            ;// 2f /
+   84 00000050 3E 51 49 
+              45 3E            DCB              0x3e, 0x51, 0x49, 0x45, 0x3e 
+                                                            ;// 30 0
+   85 00000055 00 42 7F 
+              40 00            DCB              0x00, 0x42, 0x7f, 0x40, 0x00 
+                                                            ;// 31 1
+   86 0000005A 42 61 51 
+              49 46            DCB              0x42, 0x61, 0x51, 0x49, 0x46 
+                                                            ;// 32 2
+   87 0000005F 21 41 45 
+              4B 31            DCB              0x21, 0x41, 0x45, 0x4b, 0x31 
+                                                            ;// 33 3
+   88 00000064 18 14 12 
+              7F 10            DCB              0x18, 0x14, 0x12, 0x7f, 0x10 
+                                                            ;// 34 4
+
+
+
+ARM Macro Assembler    Page 4 
+
+
+   89 00000069 27 45 45 
+              45 39            DCB              0x27, 0x45, 0x45, 0x45, 0x39 
+                                                            ;// 35 5
+   90 0000006E 3C 4A 49 
+              49 30            DCB              0x3c, 0x4a, 0x49, 0x49, 0x30 
+                                                            ;// 36 6
+   91 00000073 01 71 09 
+              05 03            DCB              0x01, 0x71, 0x09, 0x05, 0x03 
+                                                            ;// 37 7
+   92 00000078 36 49 49 
+              49 36            DCB              0x36, 0x49, 0x49, 0x49, 0x36 
+                                                            ;// 38 8
+   93 0000007D 06 49 49 
+              29 1E            DCB              0x06, 0x49, 0x49, 0x29, 0x1e 
+                                                            ;// 39 9
+   94 00000082 00 36 36 
+              00 00            DCB              0x00, 0x36, 0x36, 0x00, 0x00 
+                                                            ;// 3a :
+   95 00000087 00 56 36 
+              00 00            DCB              0x00, 0x56, 0x36, 0x00, 0x00 
+                                                            ;// 3b ;
+   96 0000008C 08 14 22 
+              41 00            DCB              0x08, 0x14, 0x22, 0x41, 0x00 
+                                                            ;// 3c <
+   97 00000091 14 14 14 
+              14 14            DCB              0x14, 0x14, 0x14, 0x14, 0x14 
+                                                            ;// 3d =
+   98 00000096 00 41 22 
+              14 08            DCB              0x00, 0x41, 0x22, 0x14, 0x08 
+                                                            ;// 3e >
+   99 0000009B 02 01 51 
+              09 06            DCB              0x02, 0x01, 0x51, 0x09, 0x06 
+                                                            ;// 3f ?
+  100 000000A0 32 49 79 
+              41 3E            DCB              0x32, 0x49, 0x79, 0x41, 0x3e 
+                                                            ;// 40 @
+  101 000000A5 7E 11 11 
+              11 7E            DCB              0x7e, 0x11, 0x11, 0x11, 0x7e 
+                                                            ;// 41 A
+  102 000000AA 7F 49 49 
+              49 36            DCB              0x7f, 0x49, 0x49, 0x49, 0x36 
+                                                            ;// 42 B
+  103 000000AF 3E 41 41 
+              41 22            DCB              0x3e, 0x41, 0x41, 0x41, 0x22 
+                                                            ;// 43 C
+  104 000000B4 7F 41 41 
+              22 1C            DCB              0x7f, 0x41, 0x41, 0x22, 0x1c 
+                                                            ;// 44 D
+  105 000000B9 7F 49 49 
+              49 41            DCB              0x7f, 0x49, 0x49, 0x49, 0x41 
+                                                            ;// 45 E
+  106 000000BE 7F 09 09 
+              09 01            DCB              0x7f, 0x09, 0x09, 0x09, 0x01 
+                                                            ;// 46 F
+  107 000000C3 3E 41 49 
+              49 7A            DCB              0x3e, 0x41, 0x49, 0x49, 0x7a 
+                                                            ;// 47 G
+  108 000000C8 7F 08 08 
+              08 7F            DCB              0x7f, 0x08, 0x08, 0x08, 0x7f 
+
+
+
+ARM Macro Assembler    Page 5 
+
+
+                                                            ;// 48 H
+  109 000000CD 00 41 7F 
+              41 00            DCB              0x00, 0x41, 0x7f, 0x41, 0x00 
+                                                            ;// 49 I
+  110 000000D2 20 40 41 
+              3F 01            DCB              0x20, 0x40, 0x41, 0x3f, 0x01 
+                                                            ;// 4a J
+  111 000000D7 7F 08 14 
+              22 41            DCB              0x7f, 0x08, 0x14, 0x22, 0x41 
+                                                            ;// 4b K
+  112 000000DC 7F 40 40 
+              40 40            DCB              0x7f, 0x40, 0x40, 0x40, 0x40 
+                                                            ;// 4c L
+  113 000000E1 7F 02 0C 
+              02 7F            DCB              0x7f, 0x02, 0x0c, 0x02, 0x7f 
+                                                            ;// 4d M
+  114 000000E6 7F 04 08 
+              10 7F            DCB              0x7f, 0x04, 0x08, 0x10, 0x7f 
+                                                            ;// 4e N
+  115 000000EB 3E 41 41 
+              41 3E            DCB              0x3e, 0x41, 0x41, 0x41, 0x3e 
+                                                            ;// 4f O
+  116 000000F0 7F 09 09 
+              09 06            DCB              0x7f, 0x09, 0x09, 0x09, 0x06 
+                                                            ;// 50 P
+  117 000000F5 3E 41 51 
+              21 5E            DCB              0x3e, 0x41, 0x51, 0x21, 0x5e 
+                                                            ;// 51 Q
+  118 000000FA 7F 09 19 
+              29 46            DCB              0x7f, 0x09, 0x19, 0x29, 0x46 
+                                                            ;// 52 R
+  119 000000FF 46 49 49 
+              49 31            DCB              0x46, 0x49, 0x49, 0x49, 0x31 
+                                                            ;// 53 S
+  120 00000104 01 01 7F 
+              01 01            DCB              0x01, 0x01, 0x7f, 0x01, 0x01 
+                                                            ;// 54 T
+  121 00000109 3F 40 40 
+              40 3F            DCB              0x3f, 0x40, 0x40, 0x40, 0x3f 
+                                                            ;// 55 U
+  122 0000010E 1F 20 40 
+              20 1F            DCB              0x1f, 0x20, 0x40, 0x20, 0x1f 
+                                                            ;// 56 V
+  123 00000113 3F 40 38 
+              40 3F            DCB              0x3f, 0x40, 0x38, 0x40, 0x3f 
+                                                            ;// 57 W
+  124 00000118 63 14 08 
+              14 63            DCB              0x63, 0x14, 0x08, 0x14, 0x63 
+                                                            ;// 58 X
+  125 0000011D 07 08 70 
+              08 07            DCB              0x07, 0x08, 0x70, 0x08, 0x07 
+                                                            ;// 59 Y
+  126 00000122 61 51 49 
+              45 43            DCB              0x61, 0x51, 0x49, 0x45, 0x43 
+                                                            ;// 5a Z
+  127 00000127 00 7F 41 
+              41 00            DCB              0x00, 0x7f, 0x41, 0x41, 0x00 
+                                                            ;// 5b [
+  128 0000012C 02 04 08 
+
+
+
+ARM Macro Assembler    Page 6 
+
+
+              10 20            DCB              0x02, 0x04, 0x08, 0x10, 0x20 
+                                                            ;// 5c '\'
+  129 00000131 00 41 41 
+              7F 00            DCB              0x00, 0x41, 0x41, 0x7f, 0x00 
+                                                            ;// 5d ]
+  130 00000136 04 02 01 
+              02 04            DCB              0x04, 0x02, 0x01, 0x02, 0x04 
+                                                            ;// 5e ^
+  131 0000013B 40 40 40 
+              40 40            DCB              0x40, 0x40, 0x40, 0x40, 0x40 
+                                                            ;// 5f _
+  132 00000140 00 01 02 
+              04 00            DCB              0x00, 0x01, 0x02, 0x04, 0x00 
+                                                            ;// 60 `
+  133 00000145 20 54 54 
+              54 78            DCB              0x20, 0x54, 0x54, 0x54, 0x78 
+                                                            ;// 61 a
+  134 0000014A 7F 48 44 
+              44 38            DCB              0x7f, 0x48, 0x44, 0x44, 0x38 
+                                                            ;// 62 b
+  135 0000014F 38 44 44 
+              44 20            DCB              0x38, 0x44, 0x44, 0x44, 0x20 
+                                                            ;// 63 c
+  136 00000154 38 44 44 
+              48 7F            DCB              0x38, 0x44, 0x44, 0x48, 0x7f 
+                                                            ;// 64 d
+  137 00000159 38 54 54 
+              54 18            DCB              0x38, 0x54, 0x54, 0x54, 0x18 
+                                                            ;// 65 e
+  138 0000015E 08 7E 09 
+              01 02            DCB              0x08, 0x7e, 0x09, 0x01, 0x02 
+                                                            ;// 66 f
+  139 00000163 0C 52 52 
+              52 3E            DCB              0x0c, 0x52, 0x52, 0x52, 0x3e 
+                                                            ;// 67 g
+  140 00000168 7F 08 04 
+              04 78            DCB              0x7f, 0x08, 0x04, 0x04, 0x78 
+                                                            ;// 68 h
+  141 0000016D 00 44 7D 
+              40 00            DCB              0x00, 0x44, 0x7d, 0x40, 0x00 
+                                                            ;// 69 i
+  142 00000172 20 40 44 
+              3D 00            DCB              0x20, 0x40, 0x44, 0x3d, 0x00 
+                                                            ;// 6a j
+  143 00000177 7F 10 28 
+              44 00            DCB              0x7f, 0x10, 0x28, 0x44, 0x00 
+                                                            ;// 6b k
+  144 0000017C 00 41 7F 
+              40 00            DCB              0x00, 0x41, 0x7f, 0x40, 0x00 
+                                                            ;// 6c l
+  145 00000181 7C 04 18 
+              04 78            DCB              0x7c, 0x04, 0x18, 0x04, 0x78 
+                                                            ;// 6d m
+  146 00000186 7C 08 04 
+              04 78            DCB              0x7c, 0x08, 0x04, 0x04, 0x78 
+                                                            ;// 6e n
+  147 0000018B 38 44 44 
+              44 38            DCB              0x38, 0x44, 0x44, 0x44, 0x38 
+                                                            ;// 6f o
+
+
+
+ARM Macro Assembler    Page 7 
+
+
+  148 00000190 7C 14 14 
+              14 08            DCB              0x7c, 0x14, 0x14, 0x14, 0x08 
+                                                            ;// 70 p
+  149 00000195 08 14 14 
+              18 7C            DCB              0x08, 0x14, 0x14, 0x18, 0x7c 
+                                                            ;// 71 q
+  150 0000019A 7C 08 04 
+              04 08            DCB              0x7c, 0x08, 0x04, 0x04, 0x08 
+                                                            ;// 72 r
+  151 0000019F 48 54 54 
+              54 20            DCB              0x48, 0x54, 0x54, 0x54, 0x20 
+                                                            ;// 73 s
+  152 000001A4 04 3F 44 
+              40 20            DCB              0x04, 0x3f, 0x44, 0x40, 0x20 
+                                                            ;// 74 t
+  153 000001A9 3C 40 40 
+              20 7C            DCB              0x3c, 0x40, 0x40, 0x20, 0x7c 
+                                                            ;// 75 u
+  154 000001AE 1C 20 40 
+              20 1C            DCB              0x1c, 0x20, 0x40, 0x20, 0x1c 
+                                                            ;// 76 v
+  155 000001B3 3C 40 30 
+              40 3C            DCB              0x3c, 0x40, 0x30, 0x40, 0x3c 
+                                                            ;// 77 w
+  156 000001B8 44 28 10 
+              28 44            DCB              0x44, 0x28, 0x10, 0x28, 0x44 
+                                                            ;// 78 x
+  157 000001BD 0C 50 50 
+              50 3C            DCB              0x0c, 0x50, 0x50, 0x50, 0x3c 
+                                                            ;// 79 y
+  158 000001C2 44 64 54 
+              4C 44            DCB              0x44, 0x64, 0x54, 0x4c, 0x44 
+                                                            ;// 7a z
+  159 000001C7 00 08 36 
+              41 00            DCB              0x00, 0x08, 0x36, 0x41, 0x00 
+                                                            ;// 7b {
+  160 000001CC 00 00 7F 
+              00 00            DCB              0x00, 0x00, 0x7f, 0x00, 0x00 
+                                                            ;// 7c |
+  161 000001D1 00 41 36 
+              08 00            DCB              0x00, 0x41, 0x36, 0x08, 0x00 
+                                                            ;// 7d }
+  162 000001D6 10 08 08 
+              10 08            DCB              0x10, 0x08, 0x08, 0x10, 0x08 
+                                                            ;// 7e ~
+  163 000001DB         clearfield
+  164 000001DB FF FF FF 
+              FF FF FF 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0xff, 0xff, 0xff, 0xff, 0xff, 0
+xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  165 000001E9 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  166 000001F7 00 00 00 
+
+
+
+ARM Macro Assembler    Page 8 
+
+
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  167 00000205 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  168 00000213 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  169 00000221 FF FF FF 
+              FF FF FF 
+              FF FF FF 
+              FF FF FF 
+              FF FF            DCB              0xff, 0xff, 0xff, 0xff, 0xff, 0
+xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+  170 0000022F FF FF FF 
+              FF FF FF 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0xff, 0xff, 0xff, 0xff, 0xff, 0
+xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  171 0000023D 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  172 0000024B 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  173 00000259 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  174 00000267 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  175 00000275 FF FF FF 
+              FF FF FF 
+              FF FF FF 
+              FF FF FF 
+              FF FF            DCB              0xff, 0xff, 0xff, 0xff, 0xff, 0
+xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+
+
+
+ARM Macro Assembler    Page 9 
+
+
+  176 00000283 FF FF FF 
+              FF FF FF 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0xff, 0xff, 0xff, 0xff, 0xff, 0
+xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  177 00000291 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  178 0000029F 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  179 000002AD 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  180 000002BB 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  181 000002C9 FF FF FF 
+              FF FF FF 
+              FF FF FF 
+              FF FF FF 
+              FF FF            DCB              0xff, 0xff, 0xff, 0xff, 0xff, 0
+xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+  182 000002D7 FF FF FF 
+              FF FF FF 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0xff, 0xff, 0xff, 0xff, 0xff, 0
+xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  183 000002E5 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  184 000002F3 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  185 00000301 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+
+
+
+ARM Macro Assembler    Page 10 
+
+
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  186 0000030F 00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00 00 
+              00 00            DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  187 0000031D FF FF FF 
+              FF FF FF 
+              FF FF FF 
+              FF FF FF 
+              FF FF            DCB              0xff, 0xff, 0xff, 0xff, 0xff, 0
+xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+  188 0000032B FF FF FF 
+              FF FF FF 
+              FF FF FF 
+              FF FF FF 
+              FF FF            DCB              0xff, 0xff, 0xff, 0xff, 0xff, 0
+xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+  189 00000339 FF FF FF 
+              FF FF FF 
+              FF FF FF 
+              FF FF FF 
+              FF FF            DCB              0xff, 0xff, 0xff, 0xff, 0xff, 0
+xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+  190 00000347 FF FF FF 
+              FF FF FF 
+              FF FF FF 
+              FF FF FF 
+              FF FF            DCB              0xff, 0xff, 0xff, 0xff, 0xff, 0
+xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+  191 00000355 FF FF FF 
+              FF FF FF 
+              FF FF FF 
+              FF FF FF 
+              FF FF            DCB              0xff, 0xff, 0xff, 0xff, 0xff, 0
+xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+  192 00000363 FF FF FF 
+              FF FF FF 
+              FF FF FF 
+              FF FF FF 
+              FF FF            DCB              0xff, 0xff, 0xff, 0xff, 0xff, 0
+xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+  193 00000371 FF FF FF 
+              FF FF FF 
+              FF FF FF 
+              FF FF FF 
+              FF FF            DCB              0xff, 0xff, 0xff, 0xff, 0xff, 0
+xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+  194 0000037F         
+  195 0000037F 04 04 1F 
+              04 04    cursorU DCB              0x04, 0x04, 0x1F, 0x04, 0x04
+  196 00000384 08 08 3E 
+              08 08            DCB              0x08, 0x08, 0x3E, 0x08, 0x08
+  197 00000389 10 10 7C 
+              10 10            DCB              0x10, 0x10, 0x7C, 0x10, 0x10
+  198 0000038E 20 20 F8 
+              20 20            DCB              0x20, 0x20, 0xF8, 0x20, 0x20
+  199 00000393 40 40 F0 
+
+
+
+ARM Macro Assembler    Page 11 
+
+
+              40 40            DCB              0x40, 0x40, 0xF0, 0x40, 0x40
+  200 00000398 80 80 E0 
+              80 80            DCB              0x80, 0x80, 0xE0, 0x80, 0x80
+  201 0000039D 00 00 C0 
+              00 00            DCB              0x00, 0x00, 0xC0, 0x00, 0x00
+  202 000003A2 00 00 80 
+              00 00            DCB              0x00, 0x00, 0x80, 0x00, 0x00
+  203 000003A7 00 00 01 
+              00 00    cursorL DCB              0x00, 0x00, 0x01, 0x00, 0x00
+  204 000003AC 00 00 03 
+              00 00            DCB              0x00, 0x00, 0x03, 0x00, 0x00
+  205 000003B1 01 01 07 
+              01 01            DCB              0x01, 0x01, 0x07, 0x01, 0x01
+  206 000003B6 02 02 0F 
+              02 02            DCB              0x02, 0x02, 0x0F, 0x02, 0x02
+  207 000003BB         
+  208 000003BB         
+  209 000003BB 7F 7F 7F 
+              7F 7F 7F 
+              7F       bshipU  DCB              0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0
+x7f, 0x7f
+  210 000003C2 FE FE FE 
+              FE FE FE 
+              FE               DCB              0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0
+xfe, 0xfe
+  211 000003C9 FC FC FC 
+              FC FC FC 
+              FC               DCB              0xfc, 0xfc, 0xfc, 0xfc, 0xfc, 0
+xfc, 0xfc
+  212 000003D0 F8 F8 F8 
+              F8 F8 F8 
+              F8               DCB              0xf8, 0xf8, 0xf8, 0xf8, 0xf8, 0
+xf8, 0xf8
+  213 000003D7 F0 F0 F0 
+              F0 F0 F0 
+              F0               DCB              0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0
+xf0, 0xf0
+  214 000003DE E0 E0 E0 
+              E0 E0 E0 
+              E0               DCB              0xe0, 0xe0, 0xe0, 0xe0, 0xe0, 0
+xe0, 0xe0
+  215 000003E5 C0 C0 C0 
+              C0 C0 C0 
+              C0               DCB              0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0
+xc0, 0xc0
+  216 000003EC 80 80 80 
+              80 80 80 
+              80               DCB              0x80, 0x80, 0x80, 0x80, 0x80, 0
+x80, 0x80
+  217 000003F3 00 00 00 
+              00 00 00 
+              00       bshipL  DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00
+  218 000003FA 00 00 00 
+              00 00 00 
+              00               DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00
+  219 00000401 01 01 01 
+              01 01 01 
+
+
+
+ARM Macro Assembler    Page 12 
+
+
+              01               DCB              0x01, 0x01, 0x01, 0x01, 0x01, 0
+x01, 0x01
+  220 00000408 03 03 03 
+              03 03 03 
+              03               DCB              0x03, 0x03, 0x03, 0x03, 0x03, 0
+x03, 0x03
+  221 0000040F 07 07 07 
+              07 07 07 
+              07               DCB              0x07, 0x07, 0x07, 0x07, 0x07, 0
+x07, 0x07
+  222 00000416 0F 0F 0F 
+              0F 0F 0F 
+              0F               DCB              0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0
+x0F, 0x0F
+  223 0000041D 1F 1F 1F 
+              1F 1F 1F 
+              1F               DCB              0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0
+x1F, 0x1F
+  224 00000424 3F 3F 3F 
+              3F 3F 3F 
+              3F               DCB              0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0
+x3F, 0x3F
+  225 0000042B         
+  226 0000042B 7F 41 41 
+              41 41 41 
+              7F       cshipU  DCB              0x7f, 0x41, 0x41, 0x41, 0x41, 0
+x41, 0x7f
+  227 00000432 FE 82 82 
+              82 82 82 
+              FE               DCB              0xfe, 0x82, 0x82, 0x82, 0x82, 0
+x82, 0xfe
+  228 00000439 FC 04 04 
+              04 04 04 
+              FC               DCB              0xfc, 0x04, 0x04, 0x04, 0x04, 0
+x04, 0xfc
+  229 00000440 F8 08 08 
+              08 08 08 
+              F8               DCB              0xf8, 0x08, 0x08, 0x08, 0x08, 0
+x08, 0xf8
+  230 00000447 F0 10 10 
+              10 10 10 
+              F0               DCB              0xf0, 0x10, 0x10, 0x10, 0x10, 0
+x10, 0xf0
+  231 0000044E E0 20 20 
+              20 20 20 
+              E0               DCB              0xe0, 0x20, 0x20, 0x20, 0x20, 0
+x20, 0xe0
+  232 00000455 C0 40 40 
+              40 40 40 
+              C0               DCB              0xc0, 0x40, 0x40, 0x40, 0x40, 0
+x40, 0xc0
+  233 0000045C 80 80 80 
+              80 80 80 
+              80               DCB              0x80, 0x80, 0x80, 0x80, 0x80, 0
+x80, 0x80
+  234 00000463 00 00 00 
+              00 00 00 
+              00       cshipL  DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00
+
+
+
+ARM Macro Assembler    Page 13 
+
+
+  235 0000046A 00 00 00 
+              00 00 00 
+              00               DCB              0x00, 0x00, 0x00, 0x00, 0x00, 0
+x00, 0x00
+  236 00000471 01 01 01 
+              01 01 01 
+              01               DCB              0x01, 0x01, 0x01, 0x01, 0x01, 0
+x01, 0x01
+  237 00000478 03 02 02 
+              02 02 02 
+              03               DCB              0x03, 0x02, 0x02, 0x02, 0x02, 0
+x02, 0x03
+  238 0000047F 07 04 04 
+              04 04 04 
+              07               DCB              0x07, 0x04, 0x04, 0x04, 0x04, 0
+x04, 0x07
+  239 00000486 0F 08 08 
+              08 08 08 
+              0F               DCB              0x0f, 0x08, 0x08, 0x08, 0x08, 0
+x08, 0x0f
+  240 0000048D 1F 10 10 
+              10 10 10 
+              1F               DCB              0x1f, 0x10, 0x10, 0x10, 0x10, 0
+x10, 0x1f
+  241 00000494 3F 20 20 
+              20 20 20 
+              3F               DCB              0x3f, 0x20, 0x20, 0x20, 0x20, 0
+x20, 0x3f
+  242 0000049B 48 61 72 
+              64 20 46 
+              61 75 6C 
+              74 20 3A 
+              28 20 04 faultmsg
+                               DCB              "Hard Fault :( ",0x04
+  243 000004AA 00              SPACE            1           ; added for padding
+                                                            
+  244 000004AB         
+  245 000004AB         ;*******************************************************
+                       **********
+  246 000004AB         ; Initializes Nokia display
+  247 000004AB         Nokia_Init
+  248 000004AB 00 B500         PUSH             {LR}
+  249 000004AE         ;Setup GPIO
+  250 000004AE 49FF            LDR              R1, =SYSCTL_RCGCGPIO 
+                                                            ; start GPIO clock
+  251 000004B0 6808            LDR              R0, [R1]
+  252 000004B2 F040 0001       ORR              R0, #0x01   ; set bit 0 
+  253 000004B6 6008            STR              R0, [R1]
+  254 000004B8 BF00            NOP                          ; allow clock to se
+                                                            ttle
+  255 000004BA BF00            NOP
+  256 000004BC BF00            NOP
+  257 000004BE 49FC            LDR              R1,=GPIO_PORTA_DIR ; make PA2,3
+                                                            ,5,6,7 output
+  258 000004C0 F04F 00EC       MOV              R0, #0xEC   ; and make PA4 inpu
+                                                            t
+  259 000004C4 6008            STR              R0,[R1]
+  260 000004C6 49FB            LDR              R1,=GPIO_PORTA_AFSEL ; enable a
+                                                            lt funct on PA2,3,4
+
+
+
+ARM Macro Assembler    Page 14 
+
+
+                                                            ,5
+  261 000004C8 F04F 003C       MOV              R0, #0x3C   ;
+  262 000004CC 6008            STR              R0,[R1]
+  263 000004CE 49FA            LDR              R1,=GPIO_PORTA_DEN ; enable dig
+                                                            ital I/O at PA2,3,4
+                                                            ,5,6,7
+  264 000004D0 F04F 00FC       MOV              R0, #0xFC   ;
+  265 000004D4 6008            STR              R0,[R1]
+  266 000004D6 49F9            LDR              R1,=GPIO_PORTA_PCTL ; configure
+                                                             PA2,3,4,5 as SSI
+  267 000004D8 48F9            LDR              R0, =0x00222200 ; set 2,3,4 and
+                                                             5 nibble  
+  268 000004DA 6008            STR              R0,[R1]
+  269 000004DC 49F9            LDR              R1,=GPIO_PORTA_AMSEL ; disable 
+                                                            analog functionalit
+                                                            y
+  270 000004DE 6808            LDR              R0, [R1]
+  271 000004E0 F020 00FC       BIC              R0, #0xFC   ;
+  272 000004E4 6008            STR              R0,[R1]
+  273 000004E6         
+  274 000004E6         ;Setup SSI 
+  275 000004E6 49F8            LDR              R1,=SYSCTL_RCGCSSI 
+                                                            ; start SSI clock
+  276 000004E8 6808            LDR              R0,[R1]
+  277 000004EA F040 0001       ORR              R0, #0x01   ; set bit 0 for SSI
+                                                            0
+  278 000004EE 6008            STR              R0,[R1]
+  279 000004F0         ; small delay
+  280 000004F0 F04F 000F       MOV              R0,#0x0F
+  281 000004F4         waitSSIClk                           ; allow clock to se
+                                                            ttle
+  282 000004F4 1E40            SUBS             R0,R0,#0x01
+  283 000004F6 D1FD            BNE              waitSSIClk
+  284 000004F8         
+  285 000004F8 49F4            LDR              R1,=SSI0_CR1 ; disable SSI duri
+                                                            ng setup and also s
+                                                            et to Master
+  286 000004FA F04F 0000       MOV              R0, #0x00   ; clear bit 1 and  
+                                                            clear bit 2 (you ca
+                                                            n clear all bits)
+  287 000004FE 6008            STR              R0,[R1]
+  288 00000500         
+  289 00000500         ; Configure baud rate PIOSC=16MHz,Baud=2MHz,CPSDVSR=4,SC
+                       R=1
+  290 00000500         ; BR=SysClk/(CPSDVSR * (1 + SCR))
+  291 00000500 49F3            LDR              R1,=SSI0_CC ; use PIOSC (16MHz)
+                                                              
+  292 00000502 F04F 0005       MOV              R0,#0x05    ; set bits 3:0 of t
+                                                            he SSICC to 0x5 
+  293 00000506 6008            STR              R0,[R1]
+  294 00000508 49F2            LDR              R1,=SSI0_CR0 ; set SCR bits to 
+                                                            0x01
+  295 0000050A 6808            LDR              R0,[R1]
+  296 0000050C F440 7080       ORR              R0, #0x0100 ;
+  297 00000510 6008            STR              R0,[R1]
+  298 00000512 49F1            LDR              R1,=SSI0_CPSR ; set CPSDVSR (pr
+                                                            escale) to 0x04
+  299 00000514 F04F 0004       MOV              R0, #0x04   ;
+  300 00000518 6008            STR              R0,[R1]
+
+
+
+ARM Macro Assembler    Page 15 
+
+
+  301 0000051A 49EE            LDR              R1,=SSI0_CR0 ; clear SPH,SPO
+  302 0000051C 6808            LDR              R0,[R1]     ; choose Freescale 
+                                                            frame format
+  303 0000051E F020 003F       BIC              R0, #0x3F   ; clear bits 5:4  
+  304 00000522 F040 0007       ORR              R0, #0x07   ; choose 8-bit data
+                                                             (set DSS bits to 0
+                                                            x07)
+  305 00000526 6008            STR              R0,[R1]
+  306 00000528 49E8            LDR              R1,=SSI0_CR1 ; enable SSI
+  307 0000052A 6808            LDR              R0,[R1]
+  308 0000052C F040 0002       ORR              R0, #0x02   ; set bit 1
+  309 00000530 6008            STR              R0,[R1]
+  310 00000532         ; DC = PA7
+  311 00000532         ; Reset LCD memory - reset already low
+  312 00000532         ; ensure reset is low
+  313 00000532 49EA            LDR              R1,=GPIO_PORTA_DATA
+  314 00000534 6808            LDR              R0, [R1]
+  315 00000536 F020 0080       BIC              R0, #0x80   ; clear reset(PA7) 
+                                                             
+  316 0000053A 6008            STR              R0,[R1]
+  317 0000053C         
+  318 0000053C F04F 000A       MOV              R0,#10
+  319 00000540         delReset
+  320 00000540 1E40            SUBS             R0,R0,#1
+  321 00000542 D1FD            BNE              delReset
+  322 00000544         
+  323 00000544 49E5            LDR              R1,=GPIO_PORTA_DATA ; 
+  324 00000546 F040 0080       ORR              R0, #0x80   ; set reset(PA7)
+  325 0000054A 6008            STR              R0,[R1]     ;
+  326 0000054C         
+  327 0000054C         ; Setup LCD
+  328 0000054C 49E3            LDR              R1,=GPIO_PORTA_DATA ; set PA6 l
+                                                            ow for Command
+  329 0000054E 6808            LDR              R0,[R1]
+  330 00000550 F020 0040       BIC              R0, #0x40   ;
+  331 00000554 6008            STR              R0,[R1]
+  332 00000556         
+  333 00000556         ;chip active (PD=0)
+  334 00000556         ;horizontal addressing (V=0)
+  335 00000556         ;extended instruction set (H=1)
+  336 00000556 F04F 0521       MOV              R5,#0x21
+  337 0000055A F7FF FFFE       BL               Out1BNokia
+  338 0000055E         ;set contrast
+  339 0000055E F04F 05B8       MOV              R5,#0xB8
+  340 00000562 F7FF FFFE       BL               Out1BNokia
+  341 00000566         ;set temp coefficient
+  342 00000566 F04F 0504       MOV              R5,#0x04
+  343 0000056A F7FF FFFE       BL               Out1BNokia
+  344 0000056E         ;set bias 1:48: try 0x13 or 0x14
+  345 0000056E F04F 0514       MOV              R5,#0x14
+  346 00000572 F7FF FFFE       BL               Out1BNokia
+  347 00000576         ;change H=0
+  348 00000576 F04F 0520       MOV              R5,#0x20
+  349 0000057A F7FF FFFE       BL               Out1BNokia
+  350 0000057E         ;set control mode to normal
+  351 0000057E F04F 050C       MOV              R5,#0x0C
+  352 00000582 F7FF FFFE       BL               Out1BNokia
+  353 00000586         ; clear screen
+  354 00000586         ; screen memory is undefined after startup
+
+
+
+ARM Macro Assembler    Page 16 
+
+
+  355 00000586 F7FF FFFE       BL               ClearNokia
+  356 0000058A         
+  357 0000058A         waitCMDDone
+  358 0000058A 49D5            LDR              R1,=SSI0_SR ; wait until SSI is
+                                                             done
+  359 0000058C 6808            LDR              R0,[R1]
+  360 0000058E F010 0010       ANDS             R0,R0,#0x10
+  361 00000592 D1FA            BNE              waitCMDDone
+  362 00000594         
+  363 00000594 F85D EB04       POP{LR}
+  364 00000598 4770            BX               LR
+  365 0000059A         ;*******************************************************
+                       **********  
+  366 0000059A         
+  367 0000059A         ;*******************************************************
+                       ********** 
+  368 0000059A         ; SSI Send routine. Bits to be sent passed via R5
+  369 0000059A         Out1BNokia
+  370 0000059A B403            PUSH             {R0,R1}
+  371 0000059C         waitSendNokia
+  372 0000059C 49D0            LDR              R1,=SSI0_SR ; wait if buffer is
+                                                             full
+  373 0000059E 6808            LDR              R0,[R1]
+  374 000005A0 F010 0002       ANDS             R0,R0,#0x02
+  375 000005A4 D0FA            BEQ              waitSendNokia
+  376 000005A6 49CF            LDR              R1,=SSI0_DR
+  377 000005A8 700D            STRB             R5,[R1]
+  378 000005AA BC03            POP              {R0,R1}
+  379 000005AC 4770            BX               LR
+  380 000005AE         ;*******************************************************
+                       **********   
+  381 000005AE         
+  382 000005AE         ;*******************************************************
+                       **********
+  383 000005AE         ; Send Image to Nokia routine 
+  384 000005AE         OutImgNokia
+  385 000005AE B51F            PUSH             {R0-R4,LR}
+  386 000005B0 B420            PUSH             {R5}        ; save Img address
+  387 000005B2 49CA            LDR              R1,=GPIO_PORTA_DATA ; set PA6 l
+                                                            ow for Command
+  388 000005B4 6808            LDR              R0,[R1]
+  389 000005B6 F020 0040       BIC              R0,#0x40
+  390 000005BA 6008            STR              R0,[R1]
+  391 000005BC F04F 0520       MOV              R5,#0x20    ; ensure H=0
+  392 000005C0 F7FF FFFE       BL               Out1BNokia
+  393 000005C4 F04F 0540       MOV              R5,#0x40    ; set Y address to 
+                                                            0
+  394 000005C8 F7FF FFFE       BL               Out1BNokia
+  395 000005CC F04F 0580       MOV              R5,#0x80    ; set X address to 
+                                                            0
+  396 000005D0 F7FF FFFE       BL               Out1BNokia
+  397 000005D4         waitImgReady
+  398 000005D4 49C2            LDR              R1,=SSI0_SR ; wait until SSI is
+                                                             done
+  399 000005D6 6808            LDR              R0,[R1]
+  400 000005D8 F010 0010       ANDS             R0,R0,#0x10
+  401 000005DC D1FA            BNE              waitImgReady
+  402 000005DE 49BF            LDR              R1,=GPIO_PORTA_DATA ; ready: se
+                                                            t PA6 high for Data
+
+
+
+ARM Macro Assembler    Page 17 
+
+
+                                                            
+  403 000005E0 6808            LDR              R0,[R1]
+  404 000005E2 F040 0040       ORR              R0,#0x40
+  405 000005E6 6008            STR              R0,[R1]
+  406 000005E8 BC20            POP              {R5}
+  407 000005EA F44F 70FC       MOV              R0,#504     ; 504 bytes in full
+                                                             image
+  408 000005EE 4629            MOV              R1,R5       ; put img address i
+                                                            n R1
+  409 000005F0         sendNxtByteNokia
+  410 000005F0 F811 5B01       LDRB             R5,[R1],#1  ; load R5 with byte
+                                                            , post inc address
+  411 000005F4 F7FF FFFE       BL               Out1BNokia
+  412 000005F8 3801            SUBS             R0,#1
+  413 000005FA D1F9            BNE              sendNxtByteNokia
+  414 000005FC E8BD 401F       POP              {R0-R4,LR}
+  415 00000600 4770            BX               LR
+  416 00000602         ;*******************************************************
+                       **********
+  417 00000602         
+  418 00000602         ;*******************************************************
+                       **********
+  419 00000602         ; Set X,Y coordinates of LCD  
+  420 00000602         SetXYNokia
+  421 00000602         ; X values 0-83 (decimal) passed via R0
+  422 00000602         ; Y values 0-5 (decimal) passed via R1
+  423 00000602         ; DC is left high, so data can be sent after
+  424 00000602 B53F            PUSH             {R0-R5,LR}
+  425 00000604 B403            PUSH             {R0-R1}
+  426 00000606 49B5            LDR              R1,=GPIO_PORTA_DATA ; set PA6 l
+                                                            ow for Command
+  427 00000608 6808            LDR              R0,[R1]
+  428 0000060A F020 0040       BIC              R0,#0x40
+  429 0000060E 6008            STR              R0,[R1]
+  430 00000610 F04F 0520       MOV              R5,#0x20    ; ensure H=0
+  431 00000614 F7FF FFFE       BL               Out1BNokia
+  432 00000618 BC03            POP              {R0-R1}
+  433 0000061A 460D            MOV              R5,R1       ; set Y address
+  434 0000061C F045 0540       ORR              R5,#0x40
+  435 00000620 F7FF FFFE       BL               Out1BNokia
+  436 00000624 4605            MOV              R5,R0       ; set X address
+  437 00000626 F045 0580       ORR              R5,#0x80
+  438 0000062A F7FF FFFE       BL               Out1BNokia
+  439 0000062E         waitXYCMD
+  440 0000062E 49AC            LDR              R1,=SSI0_SR ; wait until SSI is
+                                                             done
+  441 00000630 6808            LDR              R0,[R1]
+  442 00000632 F010 0010       ANDS             R0,R0,#0x10
+  443 00000636 D1FA            BNE              waitXYCMD
+  444 00000638 49A8            LDR              R1,=GPIO_PORTA_DATA ; set PA6 h
+                                                            igh for Data
+  445 0000063A 6808            LDR              R0,[R1]
+  446 0000063C F040 0040       ORR              R0,#0x40
+  447 00000640 6008            STR              R0,[R1]
+  448 00000642 E8BD 403F       POP              {R0-R5,LR}
+  449 00000646 4770            BX               LR
+  450 00000648         ;*******************************************************
+                       **********
+  451 00000648         
+
+
+
+ARM Macro Assembler    Page 18 
+
+
+  452 00000648         ;*******************************************************
+                       **********
+  453 00000648         ; output ASCII character to LCD screen
+  454 00000648         ; ASCII hex value passed via R5
+  455 00000648         ; This routine assumes coordinates have already been set
+                       
+  456 00000648         OutCharNokia
+  457 00000648 B51F            PUSH             {R0-R4,LR}
+  458 0000064A 49A4            LDR              R1,=GPIO_PORTA_DATA ; set PA6 h
+                                                            igh for Data
+  459 0000064C 6808            LDR              R0,[R1]
+  460 0000064E F040 0040       ORR              R0,#0x40
+  461 00000652 6008            STR              R0,[R1]
+  462 00000654 49A4            LDR              R1,=ASCII   ; load address of A
+                                                            SCII table
+  463 00000656 F1A5 0220       SUB              R2,R5,#0x20 ; calculate offset 
+                                                            of char
+  464 0000065A F04F 0305       MOV              R3,#0x05
+  465 0000065E FB02 F203       MUL              R2,R2,R3
+  466 00000662 4411            ADD              R1,R1,R2
+  467 00000664 B420            PUSH             {R5}        ; save state of R5
+  468 00000666 F04F 0005       MOV              R0,#0x05    ; 5 bytes in every 
+                                                            char
+  469 0000066A F04F 0200       MOV              R2,#0x00    ; 1 empty column be
+                                                            tween chars
+  470 0000066E         sendCharByte
+  471 0000066E F811 5B01       LDRB             R5,[R1],#1
+  472 00000672 F7FF FFFE       BL               Out1BNokia  ; send each byte of
+                                                             char
+  473 00000676 1E40            SUBS             R0,R0,#1
+  474 00000678 D1F9            BNE              sendCharByte
+  475 0000067A 4615            MOV              R5,R2
+  476 0000067C F7FF FFFE       BL               Out1BNokia  ; tack space on aft
+                                                            er char
+  477 00000680         waitCharDone
+  478 00000680 4997            LDR              R1,=SSI0_SR ; wait until SSI is
+                                                             done
+  479 00000682 6808            LDR              R0,[R1]
+  480 00000684 F010 0010       ANDS             R0,R0,#0x10
+  481 00000688 D1FA            BNE              waitCharDone
+  482 0000068A BC20            POP              {R5}
+  483 0000068C E8BD 401F       POP              {R0-R4,LR}
+  484 00000690 4770            BX               LR
+  485 00000692         ;*******************************************************
+                       ********** 
+  486 00000692         
+  487 00000692         ;*******************************************************
+                       **********
+  488 00000692         ; output ASCII string to LCD screen
+  489 00000692         ; Address of start of message passed via R5
+  490 00000692         ; Ended using EOT character 0x04
+  491 00000692         OutStrNokia
+  492 00000692 B53F            PUSH             {R0-R5,LR}
+  493 00000694 4629            MOV              R1,R5
+  494 00000696         nextStrChar
+  495 00000696 F811 5B01       LDRB             R5,[R1],#1
+  496 0000069A 2D04            CMP              R5,#0x04
+  497 0000069C D002            BEQ              doneStrNokia
+  498 0000069E F7FF FFFE       BL               OutCharNokia
+
+
+
+ARM Macro Assembler    Page 19 
+
+
+  499 000006A2 E7F8            B                nextStrChar
+  500 000006A4         doneStrNokia
+  501 000006A4 E8BD 403F       POP              {R0-R5,LR}
+  502 000006A8 4770            BX               LR
+  503 000006AA         ;*******************************************************
+                       **********
+  504 000006AA         
+  505 000006AA         ;*******************************************************
+                       **********
+  506 000006AA         ; clear LCD screen
+  507 000006AA         ClearNokia
+  508 000006AA B53F            PUSH             {R0-R5,LR}
+  509 000006AC 498B            LDR              R1,=GPIO_PORTA_DATA ; set PA6 l
+                                                            ow for Command
+  510 000006AE 6808            LDR              R0,[R1]
+  511 000006B0 F020 0040       BIC              R0,#0x40
+  512 000006B4 6008            STR              R0,[R1]
+  513 000006B6 F04F 0520       MOV              R5,#0x20    ; ensure H=0
+  514 000006BA F7FF FFFE       BL               Out1BNokia
+  515 000006BE F04F 0540       MOV              R5,#0x40    ; set Y address to 
+                                                            0
+  516 000006C2 F7FF FFFE       BL               Out1BNokia
+  517 000006C6 F04F 0580       MOV              R5,#0x80    ; set X address to 
+                                                            0
+  518 000006CA F7FF FFFE       BL               Out1BNokia
+  519 000006CE         waitClrReady
+  520 000006CE 4984            LDR              R1,=SSI0_SR ; wait until SSI is
+                                                             done
+  521 000006D0 6808            LDR              R0,[R1]
+  522 000006D2 F010 0010       ANDS             R0,R0,#0x10
+  523 000006D6 D1FA            BNE              waitClrReady
+  524 000006D8 4980            LDR              R1,=GPIO_PORTA_DATA ; set PA6 h
+                                                            igh for Data
+  525 000006DA 6808            LDR              R0,[R1]
+  526 000006DC F040 0040       ORR              R0,#0x40
+  527 000006E0 6008            STR              R0,[R1]
+  528 000006E2 F44F 70FC       MOV              R0,#504     ; 504 bytes in full
+                                                             image
+  529 000006E6 F04F 0500       MOV              R5,#0x00    ; load zeros to sen
+                                                            d
+  530 000006EA         clrNxtNokia
+  531 000006EA F7FF FFFE       BL               Out1BNokia
+  532 000006EE 3801            SUBS             R0,#1
+  533 000006F0 D1FB            BNE              clrNxtNokia
+  534 000006F2         waitClrDone
+  535 000006F2 497B            LDR              R1,=SSI0_SR ; wait until SSI is
+                                                             done
+  536 000006F4 6808            LDR              R0,[R1]
+  537 000006F6 F010 0010       ANDS             R0,R0,#0x10
+  538 000006FA D1FA            BNE              waitClrDone
+  539 000006FC E8BD 403F       POP              {R0-R5,LR}
+  540 00000700 4770            BX               LR
+  541 00000702         ;*******************************************************
+                       **********
+  542 00000702         
+  543 00000702         ;*******************************************************
+                       **********
+  544 00000702         ; output cursor to LCD screen
+  545 00000702         ; Address of cursor passed via R5
+
+
+
+ARM Macro Assembler    Page 20 
+
+
+  546 00000702         OutCrsUNokia
+  547 00000702 B53F            PUSH             {R0-R5,LR}
+  548 00000704 4979            LDR              R1, =cursorU
+  549 00000706 F04F 0305       MOV              R3,#0x05    ;Each cursor has 5 
+                                                            bytes
+  550 0000070A FB02 F203       MUL              R2,R2,R3    ;R2 decides which c
+                                                            ursor to draw
+  551 0000070E 4411            ADD              R1,R1,R2
+  552 00000710         
+  553 00000710 F04F 0205       MOV              R2, #5      ;counter for 5 char
+                                                            acters
+  554 00000714         nextPxl
+  555 00000714 F811 5B01       LDRB             R5,[R1],#1
+  556 00000718 2A00            CMP              R2,#0
+  557 0000071A D004            BEQ              waitCrsDone
+  558 0000071C F7FF FFFE       BL               Out1BNokia
+  559 00000720 F1A2 0201       SUB              R2,#1
+  560 00000724 E7F6            B                nextPxl
+  561 00000726         waitCrsDone
+  562 00000726 496E            LDR              R1,=SSI0_SR ; wait until SSI is
+                                                             done
+  563 00000728 6808            LDR              R0,[R1]
+  564 0000072A F010 0010       ANDS             R0,R0,#0x10
+  565 0000072E D1FA            BNE              waitCrsDone
+  566 00000730 E8BD 403F       POP              {R0-R5,LR}
+  567 00000734 4770            BX               LR
+  568 00000736         ;*******************************************************
+                       **********
+  569 00000736         OutCrsLNokia
+  570 00000736 B53F            PUSH             {R0-R5,LR}
+  571 00000738 496D            LDR              R1, =cursorL
+  572 0000073A F04F 0305       MOV              R3,#0x05    ;Each cursor has 5 
+                                                            bytes
+  573 0000073E F1A2 0204       SUB              R2, #4      ;cursir b is needed
+                                                             4 times
+  574 00000742 FB02 F203       MUL              R2,R2,R3    ;R2 decides which c
+                                                            ursor to draw
+  575 00000746 4411            ADD              R1,R1,R2
+  576 00000748         
+  577 00000748 F04F 0205       MOV              R2, #5      ;counter for 5 char
+                                                            acters
+  578 0000074C         nextLPxl
+  579 0000074C F811 5B01       LDRB             R5,[R1],#1
+  580 00000750 2A00            CMP              R2,#0
+  581 00000752 D004            BEQ              waitLCrsDone
+  582 00000754 F7FF FFFE       BL               Out1BNokia
+  583 00000758 F1A2 0201       SUB              R2,#1
+  584 0000075C E7F6            B                nextLPxl
+  585 0000075E         waitLCrsDone
+  586 0000075E 4960            LDR              R1,=SSI0_SR ; wait until SSI is
+                                                             done
+  587 00000760 6808            LDR              R0,[R1]
+  588 00000762 F010 0010       ANDS             R0,R0,#0x10
+  589 00000766 D1FA            BNE              waitLCrsDone
+  590 00000768 E8BD 403F       POP              {R0-R5,LR}
+  591 0000076C 4770            BX               LR
+  592 0000076E         ;*******************************************************
+                       **********
+  593 0000076E         ;*******************************************************
+
+
+
+ARM Macro Assembler    Page 21 
+
+
+                       **********
+  594 0000076E         OutBUNokia
+  595 0000076E B53F            PUSH             {R0-R5,LR}
+  596 00000770 4960            LDR              R1, =bshipU
+  597 00000772 F04F 0307       MOV              R3,#0x07    ;Each cursor has 7 
+                                                            bytes
+  598 00000776 FB02 F203       MUL              R2,R2,R3    ;R2 decides which p
+                                                            art of ship to draw
+                                                            
+  599 0000077A 4411            ADD              R1,R1,R2
+  600 0000077C         
+  601 0000077C F04F 0207       MOV              R2, #7      ;counter for 7 Byte
+                                                            s
+  602 00000780         nextBUPxl
+  603 00000780 F811 5B01       LDRB             R5,[R1],#1
+  604 00000784 2A00            CMP              R2,#0
+  605 00000786 D004            BEQ              waitBUDone
+  606 00000788 F7FF FFFE       BL               Out1BNokia
+  607 0000078C F1A2 0201       SUB              R2,#1
+  608 00000790 E7F6            B                nextBUPxl
+  609 00000792         waitBUDone
+  610 00000792 4953            LDR              R1,=SSI0_SR ; wait until SSI is
+                                                             done
+  611 00000794 6808            LDR              R0,[R1]
+  612 00000796 F010 0010       ANDS             R0,R0,#0x10
+  613 0000079A D1FA            BNE              waitBUDone
+  614 0000079C E8BD 403F       POP              {R0-R5,LR}
+  615 000007A0 4770            BX               LR
+  616 000007A2         ;*******************************************************
+                       **********
+  617 000007A2         OutBLNokia
+  618 000007A2 B53F            PUSH             {R0-R5,LR}
+  619 000007A4 4954            LDR              R1, =bshipL
+  620 000007A6 F04F 0307       MOV              R3,#0x07    ;Each cursor has 7 
+                                                            bytes
+  621 000007AA FB02 F203       MUL              R2,R2,R3    ;R2 decides which p
+                                                            art of ship to draw
+                                                            
+  622 000007AE 4411            ADD              R1,R1,R2
+  623 000007B0         
+  624 000007B0 F04F 0207       MOV              R2, #7      ;counter for 7 byte
+                                                            s
+  625 000007B4         nextBLPxl
+  626 000007B4 F811 5B01       LDRB             R5,[R1],#1
+  627 000007B8 2A00            CMP              R2,#0
+  628 000007BA D004            BEQ              waitBLDone
+  629 000007BC F7FF FFFE       BL               Out1BNokia
+  630 000007C0 F1A2 0201       SUB              R2,#1
+  631 000007C4 E7F6            B                nextBLPxl
+  632 000007C6         waitBLDone
+  633 000007C6 4946            LDR              R1,=SSI0_SR ; wait until SSI is
+                                                             done
+  634 000007C8 6808            LDR              R0,[R1]
+  635 000007CA F010 0010       ANDS             R0,R0,#0x10
+  636 000007CE D1FA            BNE              waitBLDone
+  637 000007D0 E8BD 403F       POP              {R0-R5,LR}
+  638 000007D4 4770            BX               LR
+  639 000007D6         ;*******************************************************
+                       **********
+
+
+
+ARM Macro Assembler    Page 22 
+
+
+  640 000007D6         ;*******************************************************
+                       **********
+  641 000007D6         OutCUNokia
+  642 000007D6 B53F            PUSH             {R0-R5,LR}
+  643 000007D8 4948            LDR              R1, =cshipU
+  644 000007DA F04F 0307       MOV              R3,#0x07    ;Each cursor has 7 
+                                                            bytes
+  645 000007DE FB02 F203       MUL              R2,R2,R3    ;R2 decides which s
+                                                            hip to draw
+  646 000007E2 4411            ADD              R1,R1,R2
+  647 000007E4         
+  648 000007E4 F04F 0207       MOV              R2, #7      ;counter for 7 byte
+                                                            s
+  649 000007E8         nextCUPxl
+  650 000007E8 F811 5B01       LDRB             R5,[R1],#1
+  651 000007EC 2A00            CMP              R2,#0
+  652 000007EE D004            BEQ              waitCUDone
+  653 000007F0 F7FF FFFE       BL               Out1BNokia
+  654 000007F4 F1A2 0201       SUB              R2,#1
+  655 000007F8 E7F6            B                nextCUPxl
+  656 000007FA         waitCUDone
+  657 000007FA 4939            LDR              R1,=SSI0_SR ; wait until SSI is
+                                                             done
+  658 000007FC 6808            LDR              R0,[R1]
+  659 000007FE F010 0010       ANDS             R0,R0,#0x10
+  660 00000802 D1FA            BNE              waitCUDone
+  661 00000804 E8BD 403F       POP              {R0-R5,LR}
+  662 00000808 4770            BX               LR
+  663 0000080A         ;*******************************************************
+                       **********
+  664 0000080A         OutCLNokia
+  665 0000080A B53F            PUSH             {R0-R5,LR}
+  666 0000080C 493C            LDR              R1, =cshipL
+  667 0000080E F04F 0307       MOV              R3,#0x07    ;Each cursor has 7 
+                                                            bytes
+  668 00000812 FB02 F203       MUL              R2,R2,R3    ;R2 decides which s
+                                                            hip to draw
+  669 00000816 4411            ADD              R1,R1,R2
+  670 00000818         
+  671 00000818 F04F 0207       MOV              R2, #7      ;counter for 7 byte
+                                                            s
+  672 0000081C         nextCLPxl
+  673 0000081C F811 5B01       LDRB             R5,[R1],#1
+  674 00000820 2A00            CMP              R2,#0
+  675 00000822 D004            BEQ              waitCLDone
+  676 00000824 F7FF FFFE       BL               Out1BNokia
+  677 00000828 F1A2 0201       SUB              R2,#1
+  678 0000082C E7F6            B                nextCLPxl
+  679 0000082E         waitCLDone
+  680 0000082E 492C            LDR              R1,=SSI0_SR ; wait until SSI is
+                                                             done
+  681 00000830 6808            LDR              R0,[R1]
+  682 00000832 F010 0010       ANDS             R0,R0,#0x10
+  683 00000836 D1FA            BNE              waitCLDone
+  684 00000838 E8BD 403F       POP              {R0-R5,LR}
+  685 0000083C 4770            BX               LR
+  686 0000083E         ;*******************************************************
+                       **********
+  687 0000083E         
+
+
+
+ARM Macro Assembler    Page 23 
+
+
+  688 0000083E         Cleargamefield
+  689 0000083E B51F            PUSH             {R0-R4,LR}
+  690 00000840 B420            PUSH             {R5}        ; save Img address
+  691 00000842 4D30            LDR              R5,=clearfield ; load img addre
+                                                            ss of
+  692 00000844 B420            PUSH             {R5}        ; save Img address
+  693 00000846 4925            LDR              R1,=GPIO_PORTA_DATA ; set PA6 l
+                                                            ow for Command
+  694 00000848 6808            LDR              R0,[R1]
+  695 0000084A F020 0040       BIC              R0,#0x40
+  696 0000084E 6008            STR              R0,[R1]
+  697 00000850 F04F 0520       MOV              R5,#0x20    ; ensure H=0
+  698 00000854 F7FF FFFE       BL               Out1BNokia
+  699 00000858 F04F 0541       MOV              R5,#0x41    ; set Y address to 
+                                                            0
+  700 0000085C F7FF FFFE       BL               Out1BNokia
+  701 00000860 F04F 0580       MOV              R5,#0x80    ; set X address to 
+                                                            0
+  702 00000864 F7FF FFFE       BL               Out1BNokia
+  703 00000868         waitclearReady
+  704 00000868 491D            LDR              R1,=SSI0_SR ; wait until SSI is
+                                                             done
+  705 0000086A 6808            LDR              R0,[R1]
+  706 0000086C F010 0010       ANDS             R0,R0,#0x10
+  707 00000870 D1FA            BNE              waitclearReady
+  708 00000872 491A            LDR              R1,=GPIO_PORTA_DATA ; ready: se
+                                                            t PA6 high for Data
+                                                            
+  709 00000874 6808            LDR              R0,[R1]
+  710 00000876 F040 0040       ORR              R0,#0x40
+  711 0000087A 6008            STR              R0,[R1]
+  712 0000087C BC20            POP              {R5}
+  713 0000087E F44F 70D2       MOV              R0,#420     ; 420 bytes in clea
+                                                            r image
+  714 00000882 4629            MOV              R1,R5       ; put img address i
+                                                            n R1
+  715 00000884         sendByteNokia
+  716 00000884 F811 5B01       LDRB             R5,[R1],#1  ; load R5 with byte
+                                                            , post inc address
+  717 00000888 F7FF FFFE       BL               Out1BNokia
+  718 0000088C 3801            SUBS             R0,#1
+  719 0000088E D1F9            BNE              sendByteNokia
+  720 00000890 BC20            POP              {R5}
+  721 00000892 E8BD 401F       POP              {R0-R4,LR}
+  722 00000896 4770            BX               LR
+  723 00000898         ;*******************************************************
+                       **********
+  724 00000898         hfmessage
+  725 00000898 B520            PUSH{R5,LR}
+  726 0000089A F7FF FFFE       BL               ClearNokia
+  727 0000089E 4D1A            LDR              R5,=faultmsg
+  728 000008A0 F7FF FFFE       BL               OutStrNokia
+  729 000008A4 E8BD 4020       POP{R5,LR}
+  730 000008A8 4770            BX               LR
+  731 000008AA 00 00           ALIGN
+  732 000008AC                 END
+              400FE608 
+              40004400 
+              40004420 
+
+
+
+ARM Macro Assembler    Page 24 
+
+
+              4000451C 
+              4000452C 
+              00222200 
+              40004528 
+              400FE61C 
+              40008004 
+              40008FC8 
+              40008000 
+              40008010 
+              400043FC 
+              4000800C 
+              40008008 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp --apcs=int
+erwork --depend=.\objects\nokia5110-class.d -o.\objects\nokia5110-class.o -I.\R
+TE\_Target_1 -IC:\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123 -
+IC:\Keil_v5\ARM\CMSIS\Include --predefine="__EVAL SETA 1" --predefine="__UVISIO
+N_VERSION SETA 526" --predefine="TM4C123GH6PM SETA 1" --list=.\listings\nokia51
+10-class.lst Nokia5110-Class.s
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+ASCII 00000000
+
+Symbol: ASCII
+   Definitions
+      At line 68 in file Nokia5110-Class.s
+   Uses
+      At line 462 in file Nokia5110-Class.s
+Comment: ASCII used once
+ClearNokia 000006AA
+
+Symbol: ClearNokia
+   Definitions
+      At line 507 in file Nokia5110-Class.s
+   Uses
+      At line 57 in file Nokia5110-Class.s
+      At line 355 in file Nokia5110-Class.s
+      At line 726 in file Nokia5110-Class.s
+
+Cleargamefield 0000083E
+
+Symbol: Cleargamefield
+   Definitions
+      At line 688 in file Nokia5110-Class.s
+   Uses
+      At line 60 in file Nokia5110-Class.s
+Comment: Cleargamefield used once
+Nokia_Init 000004AB
+
+Symbol: Nokia_Init
+   Definitions
+      At line 247 in file Nokia5110-Class.s
+   Uses
+      At line 51 in file Nokia5110-Class.s
+Comment: Nokia_Init used once
+Out1BNokia 0000059A
+
+Symbol: Out1BNokia
+   Definitions
+      At line 369 in file Nokia5110-Class.s
+   Uses
+      At line 52 in file Nokia5110-Class.s
+      At line 337 in file Nokia5110-Class.s
+      At line 340 in file Nokia5110-Class.s
+      At line 343 in file Nokia5110-Class.s
+      At line 346 in file Nokia5110-Class.s
+      At line 349 in file Nokia5110-Class.s
+      At line 352 in file Nokia5110-Class.s
+      At line 392 in file Nokia5110-Class.s
+      At line 394 in file Nokia5110-Class.s
+      At line 396 in file Nokia5110-Class.s
+      At line 411 in file Nokia5110-Class.s
+      At line 431 in file Nokia5110-Class.s
+      At line 435 in file Nokia5110-Class.s
+      At line 438 in file Nokia5110-Class.s
+      At line 472 in file Nokia5110-Class.s
+      At line 476 in file Nokia5110-Class.s
+      At line 514 in file Nokia5110-Class.s
+      At line 516 in file Nokia5110-Class.s
+      At line 518 in file Nokia5110-Class.s
+
+
+
+ARM Macro Assembler    Page 2 Alphabetic symbol ordering
+Relocatable symbols
+
+      At line 531 in file Nokia5110-Class.s
+      At line 558 in file Nokia5110-Class.s
+      At line 582 in file Nokia5110-Class.s
+      At line 606 in file Nokia5110-Class.s
+      At line 629 in file Nokia5110-Class.s
+      At line 653 in file Nokia5110-Class.s
+      At line 676 in file Nokia5110-Class.s
+      At line 698 in file Nokia5110-Class.s
+      At line 700 in file Nokia5110-Class.s
+      At line 702 in file Nokia5110-Class.s
+      At line 717 in file Nokia5110-Class.s
+
+OutBLNokia 000007A2
+
+Symbol: OutBLNokia
+   Definitions
+      At line 617 in file Nokia5110-Class.s
+   Uses
+      At line 62 in file Nokia5110-Class.s
+Comment: OutBLNokia used once
+OutBUNokia 0000076E
+
+Symbol: OutBUNokia
+   Definitions
+      At line 594 in file Nokia5110-Class.s
+   Uses
+      At line 61 in file Nokia5110-Class.s
+Comment: OutBUNokia used once
+OutCLNokia 0000080A
+
+Symbol: OutCLNokia
+   Definitions
+      At line 664 in file Nokia5110-Class.s
+   Uses
+      At line 64 in file Nokia5110-Class.s
+Comment: OutCLNokia used once
+OutCUNokia 000007D6
+
+Symbol: OutCUNokia
+   Definitions
+      At line 641 in file Nokia5110-Class.s
+   Uses
+      At line 63 in file Nokia5110-Class.s
+Comment: OutCUNokia used once
+OutCharNokia 00000648
+
+Symbol: OutCharNokia
+   Definitions
+      At line 456 in file Nokia5110-Class.s
+   Uses
+      At line 55 in file Nokia5110-Class.s
+      At line 498 in file Nokia5110-Class.s
+
+OutCrsLNokia 00000736
+
+Symbol: OutCrsLNokia
+   Definitions
+      At line 569 in file Nokia5110-Class.s
+   Uses
+
+
+
+ARM Macro Assembler    Page 3 Alphabetic symbol ordering
+Relocatable symbols
+
+      At line 59 in file Nokia5110-Class.s
+Comment: OutCrsLNokia used once
+OutCrsUNokia 00000702
+
+Symbol: OutCrsUNokia
+   Definitions
+      At line 546 in file Nokia5110-Class.s
+   Uses
+      At line 58 in file Nokia5110-Class.s
+Comment: OutCrsUNokia used once
+OutImgNokia 000005AE
+
+Symbol: OutImgNokia
+   Definitions
+      At line 384 in file Nokia5110-Class.s
+   Uses
+      At line 53 in file Nokia5110-Class.s
+Comment: OutImgNokia used once
+OutStrNokia 00000692
+
+Symbol: OutStrNokia
+   Definitions
+      At line 491 in file Nokia5110-Class.s
+   Uses
+      At line 56 in file Nokia5110-Class.s
+      At line 728 in file Nokia5110-Class.s
+
+SetXYNokia 00000602
+
+Symbol: SetXYNokia
+   Definitions
+      At line 420 in file Nokia5110-Class.s
+   Uses
+      At line 54 in file Nokia5110-Class.s
+Comment: SetXYNokia used once
+bshipL 000003F3
+
+Symbol: bshipL
+   Definitions
+      At line 217 in file Nokia5110-Class.s
+   Uses
+      At line 619 in file Nokia5110-Class.s
+Comment: bshipL used once
+bshipU 000003BB
+
+Symbol: bshipU
+   Definitions
+      At line 209 in file Nokia5110-Class.s
+   Uses
+      At line 596 in file Nokia5110-Class.s
+Comment: bshipU used once
+clearfield 000001DB
+
+Symbol: clearfield
+   Definitions
+      At line 163 in file Nokia5110-Class.s
+   Uses
+      At line 691 in file Nokia5110-Class.s
+Comment: clearfield used once
+
+
+
+ARM Macro Assembler    Page 4 Alphabetic symbol ordering
+Relocatable symbols
+
+clrNxtNokia 000006EA
+
+Symbol: clrNxtNokia
+   Definitions
+      At line 530 in file Nokia5110-Class.s
+   Uses
+      At line 533 in file Nokia5110-Class.s
+Comment: clrNxtNokia used once
+cshipL 00000463
+
+Symbol: cshipL
+   Definitions
+      At line 234 in file Nokia5110-Class.s
+   Uses
+      At line 666 in file Nokia5110-Class.s
+Comment: cshipL used once
+cshipU 0000042B
+
+Symbol: cshipU
+   Definitions
+      At line 226 in file Nokia5110-Class.s
+   Uses
+      At line 643 in file Nokia5110-Class.s
+Comment: cshipU used once
+cursorL 000003A7
+
+Symbol: cursorL
+   Definitions
+      At line 203 in file Nokia5110-Class.s
+   Uses
+      At line 571 in file Nokia5110-Class.s
+Comment: cursorL used once
+cursorU 0000037F
+
+Symbol: cursorU
+   Definitions
+      At line 195 in file Nokia5110-Class.s
+   Uses
+      At line 548 in file Nokia5110-Class.s
+Comment: cursorU used once
+delReset 00000540
+
+Symbol: delReset
+   Definitions
+      At line 319 in file Nokia5110-Class.s
+   Uses
+      At line 321 in file Nokia5110-Class.s
+Comment: delReset used once
+doneStrNokia 000006A4
+
+Symbol: doneStrNokia
+   Definitions
+      At line 500 in file Nokia5110-Class.s
+   Uses
+      At line 497 in file Nokia5110-Class.s
+Comment: doneStrNokia used once
+faultmsg 0000049B
+
+Symbol: faultmsg
+
+
+
+ARM Macro Assembler    Page 5 Alphabetic symbol ordering
+Relocatable symbols
+
+   Definitions
+      At line 242 in file Nokia5110-Class.s
+   Uses
+      At line 727 in file Nokia5110-Class.s
+Comment: faultmsg used once
+hfmessage 00000898
+
+Symbol: hfmessage
+   Definitions
+      At line 724 in file Nokia5110-Class.s
+   Uses
+      At line 65 in file Nokia5110-Class.s
+Comment: hfmessage used once
+nextBLPxl 000007B4
+
+Symbol: nextBLPxl
+   Definitions
+      At line 625 in file Nokia5110-Class.s
+   Uses
+      At line 631 in file Nokia5110-Class.s
+Comment: nextBLPxl used once
+nextBUPxl 00000780
+
+Symbol: nextBUPxl
+   Definitions
+      At line 602 in file Nokia5110-Class.s
+   Uses
+      At line 608 in file Nokia5110-Class.s
+Comment: nextBUPxl used once
+nextCLPxl 0000081C
+
+Symbol: nextCLPxl
+   Definitions
+      At line 672 in file Nokia5110-Class.s
+   Uses
+      At line 678 in file Nokia5110-Class.s
+Comment: nextCLPxl used once
+nextCUPxl 000007E8
+
+Symbol: nextCUPxl
+   Definitions
+      At line 649 in file Nokia5110-Class.s
+   Uses
+      At line 655 in file Nokia5110-Class.s
+Comment: nextCUPxl used once
+nextLPxl 0000074C
+
+Symbol: nextLPxl
+   Definitions
+      At line 578 in file Nokia5110-Class.s
+   Uses
+      At line 584 in file Nokia5110-Class.s
+Comment: nextLPxl used once
+nextPxl 00000714
+
+Symbol: nextPxl
+   Definitions
+      At line 554 in file Nokia5110-Class.s
+   Uses
+
+
+
+ARM Macro Assembler    Page 6 Alphabetic symbol ordering
+Relocatable symbols
+
+      At line 560 in file Nokia5110-Class.s
+Comment: nextPxl used once
+nextStrChar 00000696
+
+Symbol: nextStrChar
+   Definitions
+      At line 494 in file Nokia5110-Class.s
+   Uses
+      At line 499 in file Nokia5110-Class.s
+Comment: nextStrChar used once
+sendByteNokia 00000884
+
+Symbol: sendByteNokia
+   Definitions
+      At line 715 in file Nokia5110-Class.s
+   Uses
+      At line 719 in file Nokia5110-Class.s
+Comment: sendByteNokia used once
+sendCharByte 0000066E
+
+Symbol: sendCharByte
+   Definitions
+      At line 470 in file Nokia5110-Class.s
+   Uses
+      At line 474 in file Nokia5110-Class.s
+Comment: sendCharByte used once
+sendNxtByteNokia 000005F0
+
+Symbol: sendNxtByteNokia
+   Definitions
+      At line 409 in file Nokia5110-Class.s
+   Uses
+      At line 413 in file Nokia5110-Class.s
+Comment: sendNxtByteNokia used once
+timer 00000000
+
+Symbol: timer
+   Definitions
+      At line 48 in file Nokia5110-Class.s
+   Uses
+      None
+Comment: timer unused
+waitBLDone 000007C6
+
+Symbol: waitBLDone
+   Definitions
+      At line 632 in file Nokia5110-Class.s
+   Uses
+      At line 628 in file Nokia5110-Class.s
+      At line 636 in file Nokia5110-Class.s
+
+waitBUDone 00000792
+
+Symbol: waitBUDone
+   Definitions
+      At line 609 in file Nokia5110-Class.s
+   Uses
+      At line 605 in file Nokia5110-Class.s
+      At line 613 in file Nokia5110-Class.s
+
+
+
+ARM Macro Assembler    Page 7 Alphabetic symbol ordering
+Relocatable symbols
+
+
+waitCLDone 0000082E
+
+Symbol: waitCLDone
+   Definitions
+      At line 679 in file Nokia5110-Class.s
+   Uses
+      At line 675 in file Nokia5110-Class.s
+      At line 683 in file Nokia5110-Class.s
+
+waitCMDDone 0000058A
+
+Symbol: waitCMDDone
+   Definitions
+      At line 357 in file Nokia5110-Class.s
+   Uses
+      At line 361 in file Nokia5110-Class.s
+Comment: waitCMDDone used once
+waitCUDone 000007FA
+
+Symbol: waitCUDone
+   Definitions
+      At line 656 in file Nokia5110-Class.s
+   Uses
+      At line 652 in file Nokia5110-Class.s
+      At line 660 in file Nokia5110-Class.s
+
+waitCharDone 00000680
+
+Symbol: waitCharDone
+   Definitions
+      At line 477 in file Nokia5110-Class.s
+   Uses
+      At line 481 in file Nokia5110-Class.s
+Comment: waitCharDone used once
+waitClrDone 000006F2
+
+Symbol: waitClrDone
+   Definitions
+      At line 534 in file Nokia5110-Class.s
+   Uses
+      At line 538 in file Nokia5110-Class.s
+Comment: waitClrDone used once
+waitClrReady 000006CE
+
+Symbol: waitClrReady
+   Definitions
+      At line 519 in file Nokia5110-Class.s
+   Uses
+      At line 523 in file Nokia5110-Class.s
+Comment: waitClrReady used once
+waitCrsDone 00000726
+
+Symbol: waitCrsDone
+   Definitions
+      At line 561 in file Nokia5110-Class.s
+   Uses
+      At line 557 in file Nokia5110-Class.s
+      At line 565 in file Nokia5110-Class.s
+
+
+
+ARM Macro Assembler    Page 8 Alphabetic symbol ordering
+Relocatable symbols
+
+
+waitImgReady 000005D4
+
+Symbol: waitImgReady
+   Definitions
+      At line 397 in file Nokia5110-Class.s
+   Uses
+      At line 401 in file Nokia5110-Class.s
+Comment: waitImgReady used once
+waitLCrsDone 0000075E
+
+Symbol: waitLCrsDone
+   Definitions
+      At line 585 in file Nokia5110-Class.s
+   Uses
+      At line 581 in file Nokia5110-Class.s
+      At line 589 in file Nokia5110-Class.s
+
+waitSSIClk 000004F4
+
+Symbol: waitSSIClk
+   Definitions
+      At line 281 in file Nokia5110-Class.s
+   Uses
+      At line 283 in file Nokia5110-Class.s
+Comment: waitSSIClk used once
+waitSendNokia 0000059C
+
+Symbol: waitSendNokia
+   Definitions
+      At line 371 in file Nokia5110-Class.s
+   Uses
+      At line 375 in file Nokia5110-Class.s
+Comment: waitSendNokia used once
+waitXYCMD 0000062E
+
+Symbol: waitXYCMD
+   Definitions
+      At line 439 in file Nokia5110-Class.s
+   Uses
+      At line 443 in file Nokia5110-Class.s
+Comment: waitXYCMD used once
+waitclearReady 00000868
+
+Symbol: waitclearReady
+   Definitions
+      At line 703 in file Nokia5110-Class.s
+   Uses
+      At line 707 in file Nokia5110-Class.s
+Comment: waitclearReady used once
+53 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Absolute symbols
+
+GPIO_PORTA_AFSEL 40004420
+
+Symbol: GPIO_PORTA_AFSEL
+   Definitions
+      At line 23 in file Nokia5110-Class.s
+   Uses
+      At line 260 in file Nokia5110-Class.s
+Comment: GPIO_PORTA_AFSEL used once
+GPIO_PORTA_AMSEL 40004528
+
+Symbol: GPIO_PORTA_AMSEL
+   Definitions
+      At line 25 in file Nokia5110-Class.s
+   Uses
+      At line 269 in file Nokia5110-Class.s
+Comment: GPIO_PORTA_AMSEL used once
+GPIO_PORTA_DATA 400043FC
+
+Symbol: GPIO_PORTA_DATA
+   Definitions
+      At line 20 in file Nokia5110-Class.s
+   Uses
+      At line 313 in file Nokia5110-Class.s
+      At line 323 in file Nokia5110-Class.s
+      At line 328 in file Nokia5110-Class.s
+      At line 387 in file Nokia5110-Class.s
+      At line 402 in file Nokia5110-Class.s
+      At line 426 in file Nokia5110-Class.s
+      At line 444 in file Nokia5110-Class.s
+      At line 458 in file Nokia5110-Class.s
+      At line 509 in file Nokia5110-Class.s
+      At line 524 in file Nokia5110-Class.s
+      At line 693 in file Nokia5110-Class.s
+      At line 708 in file Nokia5110-Class.s
+
+GPIO_PORTA_DEN 4000451C
+
+Symbol: GPIO_PORTA_DEN
+   Definitions
+      At line 24 in file Nokia5110-Class.s
+   Uses
+      At line 263 in file Nokia5110-Class.s
+Comment: GPIO_PORTA_DEN used once
+GPIO_PORTA_DIR 40004400
+
+Symbol: GPIO_PORTA_DIR
+   Definitions
+      At line 22 in file Nokia5110-Class.s
+   Uses
+      At line 257 in file Nokia5110-Class.s
+Comment: GPIO_PORTA_DIR used once
+GPIO_PORTA_IM 40004010
+
+Symbol: GPIO_PORTA_IM
+   Definitions
+      At line 21 in file Nokia5110-Class.s
+   Uses
+      None
+Comment: GPIO_PORTA_IM unused
+
+
+
+ARM Macro Assembler    Page 2 Alphabetic symbol ordering
+Absolute symbols
+
+GPIO_PORTA_PCTL 4000452C
+
+Symbol: GPIO_PORTA_PCTL
+   Definitions
+      At line 26 in file Nokia5110-Class.s
+   Uses
+      At line 266 in file Nokia5110-Class.s
+Comment: GPIO_PORTA_PCTL used once
+GPIO_PORTB_AFSEL 40005420
+
+Symbol: GPIO_PORTB_AFSEL
+   Definitions
+      At line 31 in file Nokia5110-Class.s
+   Uses
+      None
+Comment: GPIO_PORTB_AFSEL unused
+GPIO_PORTB_AMSEL 40005528
+
+Symbol: GPIO_PORTB_AMSEL
+   Definitions
+      At line 33 in file Nokia5110-Class.s
+   Uses
+      None
+Comment: GPIO_PORTB_AMSEL unused
+GPIO_PORTB_DATA 400053FC
+
+Symbol: GPIO_PORTB_DATA
+   Definitions
+      At line 28 in file Nokia5110-Class.s
+   Uses
+      None
+Comment: GPIO_PORTB_DATA unused
+GPIO_PORTB_DEN 4000551C
+
+Symbol: GPIO_PORTB_DEN
+   Definitions
+      At line 32 in file Nokia5110-Class.s
+   Uses
+      None
+Comment: GPIO_PORTB_DEN unused
+GPIO_PORTB_DIR 40005400
+
+Symbol: GPIO_PORTB_DIR
+   Definitions
+      At line 30 in file Nokia5110-Class.s
+   Uses
+      None
+Comment: GPIO_PORTB_DIR unused
+GPIO_PORTB_IM 40005010
+
+Symbol: GPIO_PORTB_IM
+   Definitions
+      At line 29 in file Nokia5110-Class.s
+   Uses
+      None
+Comment: GPIO_PORTB_IM unused
+GPIO_PORTB_PCTL 4000552C
+
+Symbol: GPIO_PORTB_PCTL
+
+
+
+ARM Macro Assembler    Page 3 Alphabetic symbol ordering
+Absolute symbols
+
+   Definitions
+      At line 34 in file Nokia5110-Class.s
+   Uses
+      None
+Comment: GPIO_PORTB_PCTL unused
+SSI0_CC 40008FC8
+
+Symbol: SSI0_CC
+   Definitions
+      At line 42 in file Nokia5110-Class.s
+   Uses
+      At line 291 in file Nokia5110-Class.s
+Comment: SSI0_CC used once
+SSI0_CPSR 40008010
+
+Symbol: SSI0_CPSR
+   Definitions
+      At line 41 in file Nokia5110-Class.s
+   Uses
+      At line 298 in file Nokia5110-Class.s
+Comment: SSI0_CPSR used once
+SSI0_CR0 40008000
+
+Symbol: SSI0_CR0
+   Definitions
+      At line 37 in file Nokia5110-Class.s
+   Uses
+      At line 294 in file Nokia5110-Class.s
+      At line 301 in file Nokia5110-Class.s
+
+SSI0_CR1 40008004
+
+Symbol: SSI0_CR1
+   Definitions
+      At line 38 in file Nokia5110-Class.s
+   Uses
+      At line 285 in file Nokia5110-Class.s
+      At line 306 in file Nokia5110-Class.s
+
+SSI0_DR 40008008
+
+Symbol: SSI0_DR
+   Definitions
+      At line 39 in file Nokia5110-Class.s
+   Uses
+      At line 376 in file Nokia5110-Class.s
+Comment: SSI0_DR used once
+SSI0_SR 4000800C
+
+Symbol: SSI0_SR
+   Definitions
+      At line 40 in file Nokia5110-Class.s
+   Uses
+      At line 358 in file Nokia5110-Class.s
+      At line 372 in file Nokia5110-Class.s
+      At line 398 in file Nokia5110-Class.s
+      At line 440 in file Nokia5110-Class.s
+      At line 478 in file Nokia5110-Class.s
+      At line 520 in file Nokia5110-Class.s
+
+
+
+ARM Macro Assembler    Page 4 Alphabetic symbol ordering
+Absolute symbols
+
+      At line 535 in file Nokia5110-Class.s
+      At line 562 in file Nokia5110-Class.s
+      At line 586 in file Nokia5110-Class.s
+      At line 610 in file Nokia5110-Class.s
+      At line 633 in file Nokia5110-Class.s
+      At line 657 in file Nokia5110-Class.s
+      At line 680 in file Nokia5110-Class.s
+      At line 704 in file Nokia5110-Class.s
+
+SYSCTL_RCGCGPIO 400FE608
+
+Symbol: SYSCTL_RCGCGPIO
+   Definitions
+      At line 45 in file Nokia5110-Class.s
+   Uses
+      At line 250 in file Nokia5110-Class.s
+Comment: SYSCTL_RCGCGPIO used once
+SYSCTL_RCGCSSI 400FE61C
+
+Symbol: SYSCTL_RCGCSSI
+   Definitions
+      At line 46 in file Nokia5110-Class.s
+   Uses
+      At line 275 in file Nokia5110-Class.s
+Comment: SYSCTL_RCGCSSI used once
+22 symbols
+411 symbols in table

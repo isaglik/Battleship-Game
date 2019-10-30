@@ -1,0 +1,62 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Tool Versions:</h2>
+IDE-Version: µVision V5.26.2.0
+Copyright (C) 2018 ARM Ltd and ARM Germany GmbH. All rights reserved.
+License Information: Mustafa YENÝEVLÝ, Orta Doðu Teknik Üniversitesi, LIC=----
+ 
+Tool Versions:
+Toolchain:       MDK-Lite  Version: 5.26.2.0
+Toolchain Path:  C:\Keil_v5\ARM\ARMCC\Bin
+C Compiler:      Armcc.exe V5.06 update 6 (build 750)
+Assembler:       Armasm.exe V5.06 update 6 (build 750)
+Linker/Locator:  ArmLink.exe V5.06 update 6 (build 750)
+Library Manager: ArmAr.exe V5.06 update 6 (build 750)
+Hex Converter:   FromElf.exe V5.06 update 6 (build 750)
+CPU DLL:         SARMCM3.DLL V5.26.2.0
+Dialog DLL:      DCM.DLL V1.17.2.0
+Target DLL:      lmidk-agdi.dll V???
+Dialog DLL:      TCM.DLL V1.36.1.0
+ 
+<h2>Project:</h2>
+C:\Users\Mustafa\Desktop\Mikrop\battleship_game_v1.2\battleship_game.uvprojx
+Project File Date:  01/20/2019
+
+<h2>Output:</h2>
+*** Using Compiler 'V5.06 update 6 (build 750)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
+Rebuild target 'Target 1'
+assembling Timer.s...
+Timer.s(69): warning: A1581W: Added 1 bytes of padding at address 0xe7
+assembling GPIO.s...
+assembling StartupNokia.s...
+assembling ADC.s...
+assembling display.s...
+display.s(248): warning: A1581W: Added 1 bytes of padding at address 0x4ab
+assembling main.s...
+linking...
+.\Objects\battleship_game.axf: Warning: L6318W: startupnokia.o(RESET) contains branch to a non-code symbol My_Timer0A_Handler.
+.\Objects\battleship_game.axf: Warning: L6318W: main.o(.text) contains branch to a non-code symbol Nokia_Init.
+.\Objects\battleship_game.axf: Warning: L6307W: Relocation #REL:127 in startupnokia.o(RESET) with respect to My_Timer0A_Handler. Branch to unaligned destination.
+.\Objects\battleship_game.axf: Warning: L6307W: Relocation #REL:0 in main.o(.text) with respect to Nokia_Init. Branch to unaligned destination.
+Program Size: Code=5580 RO-data=0 RW-data=0 ZI-data=1024  
+Finished: 0 information, 4 warning and 0 error messages.
+".\Objects\battleship_game.axf" - 0 Error(s), 6 Warning(s).
+
+<h2>Software Packages used:</h2>
+
+Package Vendor: Keil
+                http://www.keil.com/pack/Keil.TM4C_DFP.1.1.0.pack
+                Keil.TM4C_DFP.1.1.0
+                Texas Instruments Tiva C Series Device Support and Examples
+
+<h2>Collection of Component include folders:</h2>
+  .\RTE\_Target_1
+  C:\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123
+
+<h2>Collection of Component Files used:</h2>
+Build Time Elapsed:  00:00:00
+</pre>
+</body>
+</html>

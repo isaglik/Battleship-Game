@@ -1,0 +1,456 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000         ; Nokia5110-ADC.s
+    2 00000000         
+    3 00000000         ; Sets up ADC0 & Seq 1 to work with 
+    4 00000000         ; two analog inputs from PD1-PD0
+    5 00000000         
+    6 00000000         ; ADC Registers
+    7 00000000         ; ADC0 base address EQU 0x40038000
+    8 00000000 40038000 
+                       ADC0_ACTSS
+                               EQU              0x40038000  ; Sample sequencer 
+                                                            (ADC0 base address)
+                                                            
+    9 00000000 40038004 
+                       ADC0_RIS
+                               EQU              0x40038004  ; Interrupt status
+   10 00000000 40038008 
+                       ADC0_IM EQU              0x40038008  ; Interrupt select
+   11 00000000 40038014 
+                       ADC0_EMUX
+                               EQU              0x40038014  ; Trigger select
+   12 00000000 40038028 
+                       ADC0_PSSI
+                               EQU              0x40038028  ; Initiate sample
+   13 00000000 40038060 
+                       ADC0_SSMUX1
+                               EQU              0x40038060  ; Input channel sel
+                                                            ect
+   14 00000000 40038064 
+                       ADC0_SSCTL1
+                               EQU              0x40038064  ; Sample sequence c
+                                                            ontrol
+   15 00000000 40038068 
+                       ADC0_SSFIFO1
+                               EQU              0x40038068  ; Channel 3 results
+                                                            
+   16 00000000 40038FC4 
+                       ADC0_PC EQU              0x40038FC4  ; Sample rate
+   17 00000000 4003800C 
+                       ADC0_ISC
+                               EQU              0x4003800C  ; Interrupt status 
+                                                            clear
+   18 00000000 40038030 
+                       ADC0_SAC
+                               EQU              0x40038030  ;hardware averaging
+                                                            
+   19 00000000         ; GPIO Registers 
+   20 00000000         ; PORT D base address EQU 0x40007000
+   21 00000000 4000751C 
+                       PORTD_DEN
+                               EQU              0x4000751C  ; Digital Enable
+   22 00000000 4000752C 
+                       PORTD_PCTL
+                               EQU              0x4000752C  ; Alternate functio
+                                                            n select
+   23 00000000 40007420 
+                       PORTD_AFSEL
+                               EQU              0x40007420  ; Enable Alt functi
+                                                            ons
+   24 00000000 40007528 
+
+
+
+ARM Macro Assembler    Page 2 
+
+
+                       PORTD_AMSEL
+                               EQU              0x40007528  ; Enable analog
+   25 00000000         
+   26 00000000         ; System Registers   
+   27 00000000 400FE608 
+                       RCGCGPIO
+                               EQU              0x400FE608  ; GPIO clock regist
+                                                            er
+   28 00000000 400FE638 
+                       RCGCADC EQU              0x400FE638  ; ADC clock registe
+                                                            r
+   29 00000000         
+   30 00000000                 AREA             routines, CODE, READONLY
+   31 00000000                 THUMB
+   32 00000000         
+   33 00000000                 EXPORT           Sampl
+   34 00000000                 EXPORT           ADC_Init
+   35 00000000         
+   36 00000000         ;*******************************************************
+                       **********
+   37 00000000         ;Samples from PD1 to R4 and PD0 to R5.
+   38 00000000         Sampl
+   39 00000000         ; start sampling routine 
+   40 00000000 B4CF            PUSH             {R0-R3,R6,R7}
+   41 00000002 4B28            LDR              R3, =ADC0_RIS ; interrupt addre
+                                                            ss  
+   42 00000004 4F28            LDR              R7, =ADC0_SSFIFO1 
+                                                            ; result address 
+   43 00000006 4A29            LDR              R2, =ADC0_PSSI ; sample sequenc
+                                                            e initiate address 
+                                                             
+   44 00000008 4E29            LDR              R6,= ADC0_ISC
+   45 0000000A         
+   46 0000000A         ; initiate sampling by enabling sequencer 1 in ADC0_PSSI
+                        
+   47 0000000A 6810            LDR              R0, [R2]
+   48 0000000C F040 0002       ORR              R0, R0, #0x02 ; set bit 2 for S
+                                                            S1  
+   49 00000010         ; cleared once sampling is initiated
+   50 00000010 6010            STR              R0, [R2]
+   51 00000012         ; check for sample complete (bit 2 of ADC0_RIS set) 
+   52 00000012         waitSam
+   53 00000012 6818            LDR              R0, [R3]
+   54 00000014 F010 0002       ANDS             R0, R0, #2  ;branch fails if th
+                                                            e flag is
+   55 00000018 D0FB            BEQ              waitSam     ;set so data can be
+                                                             read and flag is c
+                                                            leared
+   56 0000001A         
+   57 0000001A         
+   58 0000001A 683C            LDR              R4,[R7]
+   59 0000001C 683D            LDR              R5,[R7]
+   60 0000001E F04F 0002       MOV              R0, #2
+   61 00000022 6030            STR              R0, [R6]    ; clear flag 
+   62 00000024 BCCF            POP              {R0-R3,R6,R7}
+   63 00000026 4770            BX               LR
+   64 00000028         
+   65 00000028         ;*******************************************************
+                       **********
+
+
+
+ARM Macro Assembler    Page 3 
+
+
+   66 00000028         ; PD 1,0 for A/D (AIN 6,7)
+   67 00000028         ADC_Init
+   68 00000028 B403            PUSH             {R0,R1}
+   69 0000002A         ; Start clocks for features to be used  
+   70 0000002A 4922            LDR              R1, =RCGCGPIO ; Turn GPIO clock
+                                                             on
+   71 0000002C 6808            LDR              R0, [R1]
+   72 0000002E F040 0008       ORR              R0, R0, #0x08 ; enable port D c
+                                                            lock  
+   73 00000032 6008            STR              R0, [R1]
+   74 00000034 BF00            NOP
+   75 00000036 BF00            NOP
+   76 00000038 BF00            NOP                          ; Let clock stabili
+                                                            ze 
+   77 0000003A         ; Setup GPIO to make PD0-1 input for ADC0 
+   78 0000003A 491F            LDR              R1, =PORTD_AFSEL ; Enable alter
+                                                            nate functions
+   79 0000003C 6808            LDR              R0, [R1]
+   80 0000003E F040 0003       ORR              R0, R0, #0x03
+   81 00000042 6008            STR              R0, [R1]
+   82 00000044 491D            LDR              R1, =PORTD_DEN ; Disable digita
+                                                            l on PD0-1
+   83 00000046 6808            LDR              R0, [R1]
+   84 00000048 F020 0003       BIC              R0, R0, #0x03
+   85 0000004C 6008            STR              R0, [R1]
+   86 0000004E 491C            LDR              R1, =PORTD_AMSEL ; Enable analo
+                                                            g on PD0-1
+   87 00000050 6808            LDR              R0, [R1]
+   88 00000052 F040 0001       ORR              R0, R0, #0x01
+   89 00000056 6008            STR              R0, [R1]
+   90 00000058         
+   91 00000058         ; ADC initialization for Seq 1 
+   92 00000058 491A            LDR              R1, =RCGCADC ; Turn on ADC cloc
+                                                            k  
+   93 0000005A 6808            LDR              R0, [R1]
+   94 0000005C F040 0001       ORR              R0, R0, #0x01 ; set bit 0 to en
+                                                            able ADC0 clock  
+   95 00000060 6008            STR              R0, [R1]
+   96 00000062         
+   97 00000062         ; small delay
+   98 00000062 F04F 000F       MOV              R0,#0x0F
+   99 00000066         waitSSIClk                           ; allow clock to se
+                                                            ttle
+  100 00000066 1E40            SUBS             R0, R0,#0x01
+  101 00000068 D1FD            BNE              waitSSIClk
+  102 0000006A         
+  103 0000006A 4917            LDR              R1, =ADC0_ACTSS ; Disable seque
+                                                            ncer while ADC setu
+                                                            p 
+  104 0000006C 6808            LDR              R0, [R1]
+  105 0000006E F020 0002       BIC              R0, R0, #0x02 ; clear to disabl
+                                                            e seq 1  
+  106 00000072 6008            STR              R0, [R1]
+  107 00000074 4915            LDR              R1, =ADC0_EMUX ; Select trigger
+                                                             source 
+  108 00000076 6808            LDR              R0, [R1]
+  109 00000078 F020 00F0       BIC              R0, R0, #0x00F0 ; clear bits 4:
+                                                            7 to select process
+                                                            or trigger  
+
+
+
+ARM Macro Assembler    Page 4 
+
+
+  110 0000007C 6008            STR              R0, [R1]
+  111 0000007E 4914            LDR              R1, =ADC0_SSMUX1 ; Select input
+                                                             channel 
+  112 00000080 F04F 0067       MOV              R0, #0x0067
+  113 00000084 6008            STR              R0,[R1]
+  114 00000086 4913            LDR              R1, =ADC0_SSCTL1 ; Config sampl
+                                                            e sequence 
+  115 00000088 F04F 0060       MOV              R0,#0x0060  ; set bit 1 for sam
+                                                            ple 2 (IE1, END1)  
+                                                            
+  116 0000008C 6008            STR              R0, [R1]
+  117 0000008E 4912            LDR              R1, =ADC0_SAC ; Config sample s
+                                                            equence 
+  118 00000090 F04F 0003       MOV              R0,#0x3     ; set bit 1 for sam
+                                                            ple 2 (IE1, END1)  
+                                                            
+  119 00000094 6008            STR              R0, [R1]
+  120 00000096 490C            LDR              R1, =ADC0_ACTSS ; Done with set
+                                                            up, enable sequence
+                                                            r
+  121 00000098 6808            LDR              R0, [R1]
+  122 0000009A F040 0002       ORR              R0, R0, #0x02 ; set to enable s
+                                                            eq'r 1 
+  123 0000009E 6008            STR              R0, [R1]    ; sampling enabled 
+                                                            but not initiated y
+                                                            et 
+  124 000000A0 BC03            POP              {R0,R1}
+  125 000000A2 4770            BX               LR
+  126 000000A4         
+  127 000000A4         
+  128 000000A4                 ALIGN
+  129 000000A4                 END
+              40038004 
+              40038068 
+              40038028 
+              4003800C 
+              400FE608 
+              40007420 
+              4000751C 
+              40007528 
+              400FE638 
+              40038000 
+              40038014 
+              40038060 
+              40038064 
+              40038030 
+Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp --apcs=int
+erwork --depend=.\objects\adc.d -o.\objects\adc.o -I.\RTE\_Target_1 -IC:\Keil_v
+5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123 -IC:\Keil_v5\ARM\CMSIS\In
+clude --predefine="__EVAL SETA 1" --predefine="__UVISION_VERSION SETA 526" --pr
+edefine="TM4C123GH6PM SETA 1" --list=.\listings\adc.lst ADC.s
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+ADC_Init 00000028
+
+Symbol: ADC_Init
+   Definitions
+      At line 67 in file ADC.s
+   Uses
+      At line 34 in file ADC.s
+Comment: ADC_Init used once
+Sampl 00000000
+
+Symbol: Sampl
+   Definitions
+      At line 38 in file ADC.s
+   Uses
+      At line 33 in file ADC.s
+Comment: Sampl used once
+routines 00000000
+
+Symbol: routines
+   Definitions
+      At line 30 in file ADC.s
+   Uses
+      None
+Comment: routines unused
+waitSSIClk 00000066
+
+Symbol: waitSSIClk
+   Definitions
+      At line 99 in file ADC.s
+   Uses
+      At line 101 in file ADC.s
+Comment: waitSSIClk used once
+waitSam 00000012
+
+Symbol: waitSam
+   Definitions
+      At line 52 in file ADC.s
+   Uses
+      At line 55 in file ADC.s
+Comment: waitSam used once
+5 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Absolute symbols
+
+ADC0_ACTSS 40038000
+
+Symbol: ADC0_ACTSS
+   Definitions
+      At line 8 in file ADC.s
+   Uses
+      At line 103 in file ADC.s
+      At line 120 in file ADC.s
+
+ADC0_EMUX 40038014
+
+Symbol: ADC0_EMUX
+   Definitions
+      At line 11 in file ADC.s
+   Uses
+      At line 107 in file ADC.s
+Comment: ADC0_EMUX used once
+ADC0_IM 40038008
+
+Symbol: ADC0_IM
+   Definitions
+      At line 10 in file ADC.s
+   Uses
+      None
+Comment: ADC0_IM unused
+ADC0_ISC 4003800C
+
+Symbol: ADC0_ISC
+   Definitions
+      At line 17 in file ADC.s
+   Uses
+      At line 44 in file ADC.s
+Comment: ADC0_ISC used once
+ADC0_PC 40038FC4
+
+Symbol: ADC0_PC
+   Definitions
+      At line 16 in file ADC.s
+   Uses
+      None
+Comment: ADC0_PC unused
+ADC0_PSSI 40038028
+
+Symbol: ADC0_PSSI
+   Definitions
+      At line 12 in file ADC.s
+   Uses
+      At line 43 in file ADC.s
+Comment: ADC0_PSSI used once
+ADC0_RIS 40038004
+
+Symbol: ADC0_RIS
+   Definitions
+      At line 9 in file ADC.s
+   Uses
+      At line 41 in file ADC.s
+Comment: ADC0_RIS used once
+ADC0_SAC 40038030
+
+
+
+
+ARM Macro Assembler    Page 2 Alphabetic symbol ordering
+Absolute symbols
+
+Symbol: ADC0_SAC
+   Definitions
+      At line 18 in file ADC.s
+   Uses
+      At line 117 in file ADC.s
+Comment: ADC0_SAC used once
+ADC0_SSCTL1 40038064
+
+Symbol: ADC0_SSCTL1
+   Definitions
+      At line 14 in file ADC.s
+   Uses
+      At line 114 in file ADC.s
+Comment: ADC0_SSCTL1 used once
+ADC0_SSFIFO1 40038068
+
+Symbol: ADC0_SSFIFO1
+   Definitions
+      At line 15 in file ADC.s
+   Uses
+      At line 42 in file ADC.s
+Comment: ADC0_SSFIFO1 used once
+ADC0_SSMUX1 40038060
+
+Symbol: ADC0_SSMUX1
+   Definitions
+      At line 13 in file ADC.s
+   Uses
+      At line 111 in file ADC.s
+Comment: ADC0_SSMUX1 used once
+PORTD_AFSEL 40007420
+
+Symbol: PORTD_AFSEL
+   Definitions
+      At line 23 in file ADC.s
+   Uses
+      At line 78 in file ADC.s
+Comment: PORTD_AFSEL used once
+PORTD_AMSEL 40007528
+
+Symbol: PORTD_AMSEL
+   Definitions
+      At line 24 in file ADC.s
+   Uses
+      At line 86 in file ADC.s
+Comment: PORTD_AMSEL used once
+PORTD_DEN 4000751C
+
+Symbol: PORTD_DEN
+   Definitions
+      At line 21 in file ADC.s
+   Uses
+      At line 82 in file ADC.s
+Comment: PORTD_DEN used once
+PORTD_PCTL 4000752C
+
+Symbol: PORTD_PCTL
+   Definitions
+      At line 22 in file ADC.s
+
+
+
+ARM Macro Assembler    Page 3 Alphabetic symbol ordering
+Absolute symbols
+
+   Uses
+      None
+Comment: PORTD_PCTL unused
+RCGCADC 400FE638
+
+Symbol: RCGCADC
+   Definitions
+      At line 28 in file ADC.s
+   Uses
+      At line 92 in file ADC.s
+Comment: RCGCADC used once
+RCGCGPIO 400FE608
+
+Symbol: RCGCGPIO
+   Definitions
+      At line 27 in file ADC.s
+   Uses
+      At line 70 in file ADC.s
+Comment: RCGCGPIO used once
+17 symbols
+358 symbols in table
